@@ -1,14 +1,14 @@
- 'use strict';
+'use strict'
 
-const subModel = require('../models/Subscription');
-const auditLog = require('../models/AuditLog');
-const path = require('path');
-const fs = require('fs');
-const ejs = require('ejs');
-let nodemailer;
-try { nodemailer = require('nodemailer'); } catch (e) { nodemailer = null; }
+const subModel = require('../models/Subscription')
+const auditLog = require('../models/AuditLog')
+const path = require('path')
+const fs = require('fs')
+const ejs = require('ejs')
+let nodemailer
+try { nodemailer = require('nodemailer') } catch (e) { nodemailer = null }
 
-const queue = [];
+const queue = []
 
 async function enqueueForTarget({ type, targetId, subject, body }) {
   const subscribers = await subModel.findSubscribers(type, targetId)
@@ -45,9 +45,9 @@ function getTransporter() {
   // verify transporter asynchronously and log result
   if (transporter && typeof transporter.verify === 'function') {
     transporter.verify().then(() => console.log('[notify:smtp] transporter verified/ready'))
-      .catch((err) => console.error('[notify:smtp] transporter verify failed:', err && err.message ? err.message : err));
+      .catch((err) => console.error('[notify:smtp] transporter verify failed:', err && err.message ? err.message : err))
   }
-  return transporter;
+  return transporter
 }
 
 async function sendEmail(to, subject, body) {
@@ -59,35 +59,44 @@ async function sendEmail(to, subject, body) {
   const from = process.env.SMTP_FROM || `noreply@localhost`
   try {
     // if body is not HTML, attempt to render template
-    let htmlBody = body;
-    const isHtml = /<[^>]+>/.test(String(body || ''));
+    let htmlBody = body
+    const isHtml = /<[^>]+>/.test(String(body || ''))
     if (!isHtml) {
       // render local template if exists
-      const tpl = path.join(__dirname, '..', 'templates', 'email', 'notification.ejs');
+      const tpl = path.join(__dirname, '..', 'templates', 'email', 'notification.ejs')
       if (fs.existsSync(tpl)) {
         try {
-          htmlBody = await ejs.renderFile(tpl, { subject, body, isHtml: false });
+          htmlBody = await ejs.renderFile(tpl, { subject, body, isHtml: false })
         } catch (er) {
-          console.error('[notify] template render error:', er && er.message ? er.message : er);
+          console.error('[notify] template render error:', er && er.message ? er.message : er)
         }
       } else {
         // fallback: wrap plain text
-        htmlBody = `<pre style="white-space:pre-wrap">${String(body)}</pre>`;
+        htmlBody = `<pre style="white-space:pre-wrap">${String(body)}</pre>`
       }
     }
 
-    const info = await t.sendMail({ from, to, subject, html: htmlBody, text: String(body).replace(/<[^>]+>/g, '') });
-    console.log(`[notify:send] email -> ${to} · subject: ${subject} · messageId: ${info.messageId} · accepted: ${(info.accepted||[]).join(',') || '-'}${(info.rejected&&info.rejected.length)?(' · rejected:'+info.rejected.join(',')) : ''}`);
-    if (body) console.log(`[notify:send] email body preview: ${String(body).slice(0,200).replace(/\n/g,' ')}${String(body).length>200 ? '…' : ''}`);
-    return true;
+    const info = await t.sendMail({ from, to, subject, html: htmlBody, text: String(body).replace(/<[^>]+>/g, '') })
+    const accepted = (info.accepted || []).join(',') || '-'
+    const rejected = (info.rejected || []).join(',') || '-'
+    console.log(`[notify:send] email -> ${to} · subject: ${subject} · messageId: ${info.messageId} · accepted: ${accepted} · rejected: ${rejected}`)
+    try {
+      const preview = nodemailer && typeof nodemailer.getTestMessageUrl === 'function' ? nodemailer.getTestMessageUrl(info) : null
+      if (preview) console.log(`[notify:send] preview URL: ${preview}`)
+    } catch (e) {
+      // ignore preview errors
+    }
+    if (body) console.log(`[notify:send] email body preview: ${String(body).slice(0, 200).replace(/\n/g, ' ')}${String(body).length > 200 ? '…' : ''}`)
+    return true
   } catch (err) {
-    console.error('[notify] email send error:', err.message || err);
-    return false;
+    console.error('[notify] email send error:', err.message || err)
+    return false
   }
 }
 
 async function flush() {
   let sent = 0
+  console.log(`[notify:flush] starting flush, queueSize=${queue.length}, smtpConfigured=${smtpConfigured()}`)
   while (queue.length) {
     const job = queue.shift()
     try {
@@ -105,7 +114,7 @@ async function flush() {
       await auditLog.log({ userId: job.userId, action: `notify.${job.kind}`, meta: { subject: job.subject } })
       sent++
     } catch (err) {
-      console.error('[notify] job processing error:', err.message || err)
+      console.error('[notify] job processing error:', err && err.stack ? err.stack : (err.message || err))
     }
   }
   return sent
