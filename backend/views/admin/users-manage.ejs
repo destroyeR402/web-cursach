@@ -1,52 +1,161 @@
 <section class="admin-users">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:24px;flex-wrap:wrap">
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Администрирование · Пользователи</div>
-      <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">Пользователи</h1>
+      <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Пользователи <span style="font-family:var(--font-mono);font-size:18px;color:var(--muted);font-weight:400" id="usersTotalHeader">· <%= total %></span>
+      </h1>
     </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <input type="search" id="userSearch" placeholder="Email, логин, имя…" class="input" style="width:260px">
-      <div class="pagination" id="usersPagination"></div>
+    <div class="users-filters">
+      <input id="fSearch" class="input" type="search" placeholder="🔍 Email, логин, имя…" value="<%= params.search || '' %>" style="width:260px">
+      <select id="fRole" class="select" style="width:160px">
+        <option value="">Все роли</option>
+        <% roles.forEach(function(r) { %>
+          <option value="<%= r.code %>" <%= params.role === r.code ? 'selected' : '' %>><%= r.code %></option>
+        <% }); %>
+      </select>
+      <select id="fStatus" class="select" style="width:160px">
+        <option value="">Статус: все</option>
+        <option value="true"  <%= params.isActive === true  ? 'selected' : '' %>>Активные</option>
+        <option value="false" <%= params.isActive === false ? 'selected' : '' %>>Заблок.</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="users-stats">
+    <div class="users-stat">
+      <div class="users-stat-n"><%= (counts.client || 0) + (counts.editor || 0) + (counts.admin || 0) + (counts.guest || 0) %></div>
+      <div class="users-stat-t">всего</div>
+    </div>
+    <div class="users-stat">
+      <div class="users-stat-n"><%= counts.client || 0 %></div>
+      <div class="users-stat-t">клиентов</div>
+    </div>
+    <div class="users-stat">
+      <div class="users-stat-n"><%= counts.editor || 0 %></div>
+      <div class="users-stat-t">редакторов</div>
+    </div>
+    <div class="users-stat users-stat-accent">
+      <div class="users-stat-n"><%= counts.admin || 0 %></div>
+      <div class="users-stat-t">админов</div>
     </div>
   </div>
 
   <div class="card" style="overflow:hidden">
-  <table class="data-table">
-    <thead>
-      <tr><th>ID</th><th>Email</th><th>Логин</th><th>Имя</th><th>Роль</th><th>Активен</th><th>Создан</th><th></th></tr>
-    </thead>
-    <tbody id="usersTbody">
-    <% users.forEach(function(u) { %>
-      <tr data-id="<%= u.id %>" data-search="<%= (u.email + ' ' + u.username + ' ' + (u.display_name||'')).toLowerCase() %>">
-        <td><%= u.id %></td>
-        <td><%= u.email %></td>
-        <td><%= u.username %></td>
-        <td><%= u.display_name || '—' %></td>
-        <td>
-          <select class="js-role" data-id="<%= u.id %>">
-            <% roles.forEach(function(r) { %>
-              <option value="<%= r.code %>" <%= u.role === r.code ? 'selected' : '' %>><%= r.name %></option>
-            <% }); %>
-          </select>
-        </td>
-        <td>
-          <input type="checkbox" class="js-active" data-id="<%= u.id %>" <%= u.is_active ? 'checked' : '' %>>
-        </td>
-        <td><%= new Date(u.created_at).toLocaleDateString('ru-RU') %></td>
-        <td>
-          <% if (u.role === 'editor') { %>
-            <select class="js-assign" data-user-id="<%= u.id %>">
-              <option value="">— закрепить за каналом —</option>
-              <% channels.forEach(function(c) { %>
-                <option value="<%= c.id %>"><%= c.name %></option>
-              <% }); %>
-            </select>
-          <% } %>
-        </td>
-      </tr>
-    <% }); %>
-    </tbody>
-  </table>
+    <table class="data-table" id="usersTable">
+      <thead>
+        <tr>
+          <th class="js-sort" data-sort="id" style="width:80px;cursor:pointer">ID <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="email" style="cursor:pointer">Email · Логин <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="display_name" style="cursor:pointer">Имя <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="role" style="width:130px;cursor:pointer">Роль <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="is_active" style="width:100px;cursor:pointer">Активен <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="created_at" style="width:120px;cursor:pointer">Создан <span class="sort-ind"></span></th>
+          <th style="width:220px">Закреплён канал</th>
+        </tr>
+      </thead>
+      <tbody id="usersTbody"></tbody>
+    </table>
+    <div id="usersEmpty" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase">
+      Пользователей не найдено
+    </div>
+  </div>
+
+  <div class="users-footer">
+    <div id="usersStat" class="page-info"></div>
+    <div class="pagination" id="usersPagination"></div>
+    <div class="users-pagesize">
+      <span class="label" style="margin:0">На странице</span>
+      <select id="fPageSize" class="select" style="width:auto">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
   </div>
 </section>
-<script src="/js/roles/admin.js"></script>
+
+<style>
+  .admin-users .users-filters {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .admin-users .users-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    background: var(--surface);
+  }
+  .admin-users .users-stat {
+    padding: 18px 22px;
+    border-right: 1px solid var(--border);
+  }
+  .admin-users .users-stat:last-child { border-right: none; }
+  .admin-users .users-stat-accent {
+    background: var(--accent-soft);
+    border-top: 1px solid var(--primary);
+    margin-top: -1px;
+  }
+  .admin-users .users-stat-accent .users-stat-n { color: var(--primary); }
+  .admin-users .users-stat-accent .users-stat-t { color: var(--primary-dark); }
+  .users-stat-n {
+    font-family: var(--font-sans);
+    font-weight: 300; font-size: 38px; line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .users-stat-t {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .users-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .users-pagesize { display: flex; gap: 8px; align-items: center; }
+  .js-sort .sort-ind { color: var(--muted); margin-left: 4px; font-family: var(--font-mono); font-size: 10px; }
+  .js-sort.sort-active .sort-ind { color: var(--primary); }
+  .js-sort:hover { color: var(--primary); }
+  .user-active-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .user-login {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-top: 3px;
+  }
+  .role-select-cell {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 4px 8px;
+  }
+  @media (max-width: 900px) {
+    .admin-users .users-stats { grid-template-columns: repeat(2, 1fr); }
+    .admin-users .users-stats .users-stat:nth-child(2) { border-right: none; }
+  }
+</style>
+
+<script>
+  window.__USERS_INITIAL__ = {
+    users: <%- JSON.stringify(users) %>,
+    total: <%= total %>,
+    params: <%- JSON.stringify(params) %>,
+    roles: <%- JSON.stringify(roles) %>,
+    channels: <%- JSON.stringify(channels) %>
+  };
+</script>
+<script src="/js/roles/admin-users.js"></script>
