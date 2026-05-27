@@ -54,4 +54,14 @@ router.patch('/profile',
   auth.patchProfile
 );
 
+router.patch('/password',
+  requireAuth,
+  body('currentPassword').notEmpty().withMessage('Введите текущий пароль'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Новый пароль не менее 6 символов'),
+  validate,
+  auth.patchPassword
+);
+
+router.delete('/profile', requireAuth, auth.deleteAccount);
+
 module.exports = router;

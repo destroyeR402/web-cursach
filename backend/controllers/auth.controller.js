@@ -2,6 +2,8 @@
 
 const authService = require('../services/auth.service');
 const userModel = require('../models/User');
+const auditModel = require('../models/AuditLog');
+const { hashPassword, verifyPassword } = require('../utils/password.util');
 const { ok, created, fail } = require('../utils/response.util');
 const jwtCfg = require('../config/jwt.config');
 
@@ -60,6 +62,49 @@ async function patchProfile(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function patchPassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword) return fail(res, 400, 'CURRENT_REQUIRED', 'Введите текущий пароль');
+    if (!newPassword || newPassword.length < 6) return fail(res, 400, 'WEAK_PASSWORD', 'Новый пароль должен быть не менее 6 символов');
+    if (currentPassword === newPassword) return fail(res, 400, 'SAME_PASSWORD', 'Новый пароль не должен совпадать с текущим');
+
+    const user = await userModel.findById(req.user.id);
+    const matches = await verifyPassword(currentPassword, user.password_hash);
+    if (!matches) return fail(res, 400, 'BAD_CURRENT', 'Текущий пароль введён неверно');
+
+    await userModel.updatePassword(user.id, await hashPassword(newPassword));
+    await auditModel.log({
+      userId: user.id, action: 'user.password_change',
+      ip: req.ip, userAgent: req.get('user-agent'),
+    });
+    return ok(res, { changed: true });
+  } catch (err) { next(err); }
+}
+
+async function deleteAccount(req, res, next) {
+  try {
+    const { password } = req.body || {};
+    if (!password) return fail(res, 400, 'PASSWORD_REQUIRED', 'Для удаления аккаунта подтвердите пароль');
+
+    const user = await userModel.findById(req.user.id);
+    if (user.role === 'admin') return fail(res, 403, 'ADMIN_DELETE_FORBIDDEN', 'Аккаунт администратора нельзя удалить через профиль');
+
+    const matches = await verifyPassword(password, user.password_hash);
+    if (!matches) return fail(res, 400, 'BAD_PASSWORD', 'Пароль введён неверно');
+
+    await auditModel.log({
+      userId: user.id, action: 'user.self_delete',
+      ip: req.ip, userAgent: req.get('user-agent'),
+    });
+    await userModel.remove(user.id);
+
+    if (req.session) await new Promise((r) => req.session.destroy(r));
+    res.clearCookie(jwtCfg.COOKIE_NAME);
+    return ok(res, { deleted: true });
+  } catch (err) { next(err); }
+}
+
 function renderLogin(req, res) {
   res.render('auth/login', { title: 'Вход', next: req.query.next || '/' });
 }
@@ -68,11 +113,15 @@ function renderRegister(req, res) {
   res.render('auth/register', { title: 'Регистрация' });
 }
 
-function renderProfile(req, res) {
-  res.render('auth/profile', { title: 'Профиль' });
+async function renderProfile(req, res, next) {
+  try {
+    const stats = await userModel.profileStats(req.user.id);
+    res.render('auth/profile', { title: 'Профиль', stats });
+  } catch (err) { next(err); }
 }
 
 module.exports = {
-  postRegister, postLogin, postLogout, getMe, patchProfile,
+  postRegister, postLogin, postLogout, getMe,
+  patchProfile, patchPassword, deleteAccount,
   renderLogin, renderRegister, renderProfile,
 };

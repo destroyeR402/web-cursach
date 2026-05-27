@@ -77,28 +77,40 @@
 
         <%
           // SSR-рендер слотов — таймлайн виден сразу, без ожидания AJAX.
-          // PX_PER_MIN=2, должен совпадать с editor.js
+          // PX_PER_MIN=2, должен совпадать с editor.js.
+          // Время отсчитывается от 00:00 ПРОСМАТРИВАЕМОГО дня, поэтому слоты,
+          // начавшиеся вчера или уходящие на завтра, корректно клипуются по краям.
           function fmtHM(d) {
             var x = new Date(d);
             return String(x.getHours()).padStart(2,'0') + ':' + String(x.getMinutes()).padStart(2,'0');
           }
+          var viewDayStart = new Date(currentDate + 'T00:00:00').getTime();
           slots.forEach(function(s) {
             var start = new Date(s.starts_at);
             var end   = new Date(s.ends_at);
-            var startMin = start.getHours() * 60 + start.getMinutes();
-            var endMin   = end.getHours()   * 60 + end.getMinutes();
-            if (endMin <= startMin) endMin = 1440;
-            var topPx    = startMin * 2;
-            var heightPx = Math.max(10, (endMin - startMin) * 2);
+            var startMin = Math.round((start.getTime() - viewDayStart) / 60000);
+            var endMin   = Math.round((end.getTime()   - viewDayStart) / 60000);
+            var visStart = Math.max(0, startMin);
+            var visEnd   = Math.min(1440, endMin);
+            var topPx    = visStart * 2;
+            var heightPx = Math.max(10, (visEnd - visStart) * 2);
+            var cls = 'gb-slot';
+            if (s.is_published) cls += ' published';
+            if (startMin < 0)   cls += ' cont-prev';
+            if (endMin > 1440)  cls += ' cont-next';
         %>
-          <div class="gb-slot<%= s.is_published ? ' published' : '' %>"
+          <div class="<%= cls %>"
                data-slot-id="<%= s.id %>"
+               data-starts-at="<%= start.toISOString() %>"
+               data-ends-at="<%= end.toISOString() %>"
                style="top:<%= topPx %>px;height:<%= heightPx %>px">
+            <div class="gb-slot-resize gb-slot-resize-top" title="Перетащить начало"></div>
             <div class="gb-slot-body">
               <span class="gb-slot-time"><%= fmtHM(start) %>–<%= fmtHM(end) %></span>
               <span class="gb-slot-title"><%= s.program_title %></span>
             </div>
             <button class="js-del-slot" title="Удалить">×</button>
+            <div class="gb-slot-resize gb-slot-resize-bottom" title="Перетащить конец"></div>
           </div>
         <% }); %>
 
@@ -208,9 +220,13 @@
     padding: 3px 6px 3px 8px; font-size: 12px;
     display: flex; align-items: flex-start; justify-content: space-between;
     gap: 4px; overflow: hidden; z-index: 5; box-sizing: border-box;
+    cursor: grab; user-select: none;
   }
+  .gb-slot.slot-dragging { opacity: 0.75; z-index: 8; cursor: grabbing; box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
   .gb-slot.published { border-left-color: var(--success); }
-  .gb-slot-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; }
+  .gb-slot.cont-prev { border-top: 2px dashed var(--primary); border-top-left-radius: 0; border-top-right-radius: 0; }
+  .gb-slot.cont-next { border-bottom: 2px dashed var(--primary); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .gb-slot-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; flex: 1; pointer-events: none; }
   .gb-slot-time { font-size: 10px; opacity: 0.7; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--primary); }
   .gb-slot-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
   .gb-slot .js-del-slot {
@@ -219,6 +235,20 @@
     align-self: flex-start;
   }
   .gb-slot .js-del-slot:hover { color: var(--danger); }
+
+  /* Resize handles на верхнем/нижнем крае слота */
+  .gb-slot-resize {
+    position: absolute; left: 0; right: 0; height: 6px;
+    cursor: ns-resize; z-index: 7;
+  }
+  .gb-slot-resize-top    { top: 0; }
+  .gb-slot-resize-bottom { bottom: 0; }
+  .gb-slot-resize:hover  { background: rgba(94,240,255,0.35); }
+  /* На continuation-краях ручка не нужна — слот клипуется на границе суток */
+  .gb-slot.cont-prev .gb-slot-resize-top    { display: none; }
+  .gb-slot.cont-next .gb-slot-resize-bottom { display: none; }
+
+  body.slot-dragging-active { user-select: none; }
 
   .gb-timeline.gb-loading::after {
     content: 'Загрузка…'; position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
