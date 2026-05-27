@@ -90,12 +90,16 @@ async function sendEmail(to, subject, body) {
     return true
   } catch (err) {
     console.error('[notify] email send error:', err && err.stack ? err.stack : (err.message || err))
-    // fallback: if SMTP DNS failed (e.g. smtp.example.com) and nodemailer available,
-    // create Ethereal test account and resend once for local testing
-    const msg = String(err && (err.code || err.message || ''))
+    // fallback: controlled by SMTP_FALLBACK env var (values: 'ethereal'|'none').
+    const fallbackMode = (process.env.SMTP_FALLBACK || 'ethereal').toLowerCase();
+    const msg = String(err && (err.code || err.message || ''));
+    if (fallbackMode === 'none') {
+      console.log('[notify] SMTP fallback disabled by SMTP_FALLBACK=none; not attempting Ethereal resend');
+      return false;
+    }
     if (nodemailer && /ENOTFOUND|getaddrinfo/i.test(msg)) {
       try {
-        console.log('[notify] SMTP host unreachable — creating Ethereal test account as fallback')
+        console.log('[notify] SMTP host unreachable — attempting Ethereal fallback (SMTP_FALLBACK=' + fallbackMode + ')')
         const testAcc = await nodemailer.createTestAccount()
         const ethTrans = nodemailer.createTransport({
           host: testAcc.smtp.host,
@@ -111,6 +115,8 @@ async function sendEmail(to, subject, body) {
         console.error('[notify] fallback send failed:', er2 && er2.stack ? er2.stack : (er2.message || er2))
         return false
       }
+    } else {
+      console.log('[notify] SMTP fallback not applicable for error:', msg);
     }
     return false
   }
