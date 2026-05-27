@@ -19,9 +19,17 @@ async function findById(id) {
   return rows[0] || null;
 }
 
-async function listForChannelInRange(channelId, from, to, { onlyPublished = false } = {}) {
-  const where = ['s.channel_id = $1', 's.starts_at >= $2', 's.starts_at < $3'];
+async function listForChannelInRange(channelId, from, to, { onlyPublished = false, overlap = false } = {}) {
+  // overlap=true: возвращаем все слоты, которые ПЕРЕСЕКАЮТ окно
+  // (нужно для редактора, чтобы видеть «хвосты» передач, начавшихся накануне).
+  // overlap=false: только слоты, НАЧАВШИЕСЯ внутри окна (нужно для publishDay).
+  const where = ['s.channel_id = $1'];
   const params = [channelId, from, to];
+  if (overlap) {
+    where.push('s.starts_at < $3', 's.ends_at > $2');
+  } else {
+    where.push('s.starts_at >= $2', 's.starts_at < $3');
+  }
   if (onlyPublished) where.push('s.is_published = TRUE');
   const { rows } = await query(
     `${SELECT} WHERE ${where.join(' AND ')} ORDER BY s.starts_at`,

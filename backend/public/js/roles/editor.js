@@ -32,27 +32,60 @@
   }
 
   // ──────────────────────────────────────────────────────────────────
-  // Рендер тайла слота
+  // Геометрия слота относительно ПРОСМАТРИВАЕМОГО дня.
+  // Слот может «торчать» снизу (заходит на завтра) или начинаться
+  // раньше 00:00 (хвост со вчера) — клипуем по краям 0..1440.
   // ──────────────────────────────────────────────────────────────────
+  function viewDayStartMs() {
+    var p = date.split('-');
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 0, 0, 0, 0).getTime();
+  }
+  function slotGeom(startsAt, endsAt) {
+    var start = new Date(startsAt);
+    var end   = new Date(endsAt);
+    var startMin = Math.round((start.getTime() - viewDayStartMs()) / 60000);
+    var endMin   = Math.round((end.getTime()   - viewDayStartMs()) / 60000);
+    var visStart = Math.max(0, startMin);
+    var visEnd   = Math.min(TOTAL_MINS, endMin);
+    return {
+      start: start, end: end,
+      startMin: startMin, endMin: endMin,
+      topPx: visStart * PX_PER_MIN,
+      heightPx: Math.max(PX_PER_MIN * 5, (visEnd - visStart) * PX_PER_MIN),
+      contPrev: startMin < 0,
+      contNext: endMin > TOTAL_MINS,
+    };
+  }
+  function applyGeom($tile, g) {
+    $tile.css({ top: g.topPx + 'px', height: g.heightPx + 'px' });
+    $tile.toggleClass('cont-prev', g.contPrev);
+    $tile.toggleClass('cont-next', g.contNext);
+    $tile.attr('data-starts-at', g.start.toISOString());
+    $tile.attr('data-ends-at',   g.end.toISOString());
+    $tile.find('.gb-slot-time').text(fmtTime(g.start) + '–' + fmtTime(g.end));
+  }
+
   function renderSlot(slot) {
-    var start    = new Date(slot.starts_at);
-    var end      = new Date(slot.ends_at);
-    var startMin = start.getHours() * 60 + start.getMinutes();
-    var endMin   = end.getHours()   * 60 + end.getMinutes();
-    if (endMin <= startMin) endMin = TOTAL_MINS;
-    var topPx    = startMin * PX_PER_MIN;
-    var heightPx = Math.max(PX_PER_MIN * 5, (endMin - startMin) * PX_PER_MIN);
+    var g = slotGeom(slot.starts_at, slot.ends_at);
+    var cls = 'gb-slot';
+    if (slot.is_published) cls += ' published';
+    if (g.contPrev) cls += ' cont-prev';
+    if (g.contNext) cls += ' cont-next';
 
     var $tile = $(
-      '<div class="gb-slot' + (slot.is_published ? ' published' : '') + '" data-slot-id="' + slot.id + '">' +
+      '<div class="' + cls + '" data-slot-id="' + slot.id + '"' +
+           ' data-starts-at="' + g.start.toISOString() + '"' +
+           ' data-ends-at="'   + g.end.toISOString()   + '">' +
+        '<div class="gb-slot-resize gb-slot-resize-top" title="Перетащить начало"></div>' +
         '<div class="gb-slot-body">' +
-          '<span class="gb-slot-time">' + fmtTime(start) + '–' + fmtTime(end) + '</span>' +
+          '<span class="gb-slot-time">' + fmtTime(g.start) + '–' + fmtTime(g.end) + '</span>' +
           '<span class="gb-slot-title">' + esc(slot.program_title || '') + '</span>' +
         '</div>' +
         '<button class="js-del-slot" title="Удалить">×</button>' +
+        '<div class="gb-slot-resize gb-slot-resize-bottom" title="Перетащить конец"></div>' +
       '</div>'
     );
-    $tile.css({ top: topPx + 'px', height: heightPx + 'px' });
+    $tile.css({ top: g.topPx + 'px', height: g.heightPx + 'px' });
     $timeline.append($tile);
   }
 
@@ -132,22 +165,31 @@
     applyState();
   });
 
+  // toISOString() даёт UTC и в восточных таймзонах съезжает на сутки —
+  // считаем локально, форматируем вручную.
+  function toLocalISODate(d) {
+    return d.getFullYear() + '-' +
+           pad(d.getMonth() + 1) + '-' +
+           pad(d.getDate());
+  }
+  function shiftDate(dateStr, days) {
+    var parts = dateStr.split('-');
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10) + days);
+    return toLocalISODate(d);
+  }
+
   $('#btnPrev').on('click', function () {
-    var d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() - 1);
-    date = d.toISOString().slice(0, 10);
+    date = shiftDate(date, -1);
     applyState();
   });
 
   $('#btnNext').on('click', function () {
-    var d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    date = d.toISOString().slice(0, 10);
+    date = shiftDate(date, 1);
     applyState();
   });
 
   $('#btnToday').on('click', function () {
-    date = new Date().toISOString().slice(0, 10);
+    date = toLocalISODate(new Date());
     applyState();
   });
 
@@ -219,17 +261,21 @@
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
 
+    // Разрешаем заходить за полночь — старт ограничен только 0,
+    // верхний предел отдан на откуп: «хвост» уйдёт на завтра.
     var snapped = Math.max(0, Math.min(
-      TOTAL_MINS - dragging.duration,
+      TOTAL_MINS - SNAP_MIN,
       snapTo5(getDropMinute(e.clientY))
     ));
 
+    var visEnd = Math.min(TOTAL_MINS, snapped + dragging.duration);
     $ghost.css({
       top:    snapped * PX_PER_MIN + 'px',
-      height: Math.max(10, dragging.duration * PX_PER_MIN) + 'px',
+      height: Math.max(10, (visEnd - snapped) * PX_PER_MIN) + 'px',
       display: 'flex',
     }).find('.ghost-text').text(
-      dragging.title + '  ' + minToStr(snapped) + '–' + minToStr(snapped + dragging.duration)
+      dragging.title + '  ' + minToStr(snapped) + '–' + minToStr(snapped + dragging.duration) +
+      (snapped + dragging.duration > TOTAL_MINS ? '  →след.день' : '')
     );
   }
 
@@ -248,7 +294,7 @@
     e.stopPropagation();
 
     var snapped = Math.max(0, Math.min(
-      TOTAL_MINS - dragging.duration,
+      TOTAL_MINS - SNAP_MIN,
       snapTo5(getDropMinute(e.clientY))
     ));
 
@@ -267,6 +313,117 @@
   });
   document.addEventListener('drop', function (e) {
     if (dragging) e.preventDefault();
+  });
+
+  // ──────────────────────────────────────────────────────────────────
+  // Перемещение / изменение размера существующих слотов
+  // (mouse-based, чтобы не конфликтовать с native HTML5 DnD на пуле)
+  // ──────────────────────────────────────────────────────────────────
+  var slotDrag = null;
+
+  $timeline.on('mousedown', '.gb-slot', function (e) {
+    if (e.button !== 0) return;
+    var $target = $(e.target);
+    if ($target.is('.js-del-slot')) return; // клик по «×» — не drag
+
+    var $tile  = $(this);
+    var slotId = parseInt($tile.data('slot-id'), 10);
+    if (!slotId) return;
+
+    var startsAt0 = $tile.attr('data-starts-at');
+    var endsAt0   = $tile.attr('data-ends-at');
+    if (!startsAt0 || !endsAt0) return;
+
+    var startMs0 = new Date(startsAt0).getTime();
+    var endMs0   = new Date(endsAt0).getTime();
+    var dayMs0   = viewDayStartMs();
+    var startMin0 = Math.round((startMs0 - dayMs0) / 60000);
+    var endMin0   = Math.round((endMs0   - dayMs0) / 60000);
+
+    var mode = 'move';
+    if ($target.hasClass('gb-slot-resize-top'))    mode = 'resize-top';
+    else if ($target.hasClass('gb-slot-resize-bottom')) mode = 'resize-bottom';
+
+    slotDrag = {
+      slotId: slotId,
+      $tile: $tile,
+      mode: mode,
+      pointerY: e.clientY,
+      startMin0: startMin0,
+      endMin0: endMin0,
+      duration: endMin0 - startMin0,
+      newStartMin: startMin0,
+      newEndMin: endMin0,
+      changed: false,
+    };
+    $tile.addClass('slot-dragging');
+    document.body.classList.add('slot-dragging-active');
+    e.preventDefault();
+  });
+
+  $(document).on('mousemove.gbSlotDrag', function (e) {
+    if (!slotDrag) return;
+    var deltaMin = snapTo5((e.clientY - slotDrag.pointerY) / PX_PER_MIN);
+    if (!deltaMin && !slotDrag.changed) return;
+
+    var ns = slotDrag.startMin0;
+    var ne = slotDrag.endMin0;
+    if (slotDrag.mode === 'move') {
+      ns = slotDrag.startMin0 + deltaMin;
+      ne = slotDrag.endMin0   + deltaMin;
+    } else if (slotDrag.mode === 'resize-top') {
+      ns = Math.min(slotDrag.endMin0 - SNAP_MIN, slotDrag.startMin0 + deltaMin);
+    } else if (slotDrag.mode === 'resize-bottom') {
+      ne = Math.max(slotDrag.startMin0 + SNAP_MIN, slotDrag.endMin0 + deltaMin);
+    }
+    slotDrag.newStartMin = ns;
+    slotDrag.newEndMin   = ne;
+    if (ns !== slotDrag.startMin0 || ne !== slotDrag.endMin0) slotDrag.changed = true;
+
+    var visStart = Math.max(0, ns);
+    var visEnd   = Math.min(TOTAL_MINS, ne);
+    slotDrag.$tile.css({
+      top: visStart * PX_PER_MIN + 'px',
+      height: Math.max(PX_PER_MIN * 5, (visEnd - visStart) * PX_PER_MIN) + 'px',
+    });
+    slotDrag.$tile.toggleClass('cont-prev', ns < 0);
+    slotDrag.$tile.toggleClass('cont-next', ne > TOTAL_MINS);
+    slotDrag.$tile.find('.gb-slot-time').text(minToStr(ns) + '–' + minToStr(ne));
+  });
+
+  $(document).on('mouseup.gbSlotDrag', function () {
+    if (!slotDrag) return;
+    var d = slotDrag;
+    slotDrag = null;
+    d.$tile.removeClass('slot-dragging');
+    document.body.classList.remove('slot-dragging-active');
+
+    if (!d.changed) return;
+
+    var newStartIso = new Date(viewDayStartMs() + d.newStartMin * 60000).toISOString();
+    var newEndIso   = new Date(viewDayStartMs() + d.newEndMin   * 60000).toISOString();
+
+    $.ajax({
+      url: '/api/schedule/slots/' + d.slotId,
+      method: 'PATCH',
+      contentType: 'application/json',
+      data: JSON.stringify({ startsAt: newStartIso, endsAt: newEndIso }),
+    })
+    .done(function (resp) {
+      $conflict.hide();
+      var g = slotGeom(resp.data.starts_at, resp.data.ends_at);
+      applyGeom(d.$tile, g);
+      toast('Слот обновлён');
+    })
+    .fail(function (xhr) {
+      // Откатываем визуально на исходные значения
+      var g = slotGeom(
+        new Date(viewDayStartMs() + d.startMin0 * 60000).toISOString(),
+        new Date(viewDayStartMs() + d.endMin0   * 60000).toISOString()
+      );
+      applyGeom(d.$tile, g);
+      handleConflict(xhr);
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────
