@@ -89,7 +89,29 @@ async function sendEmail(to, subject, body) {
     if (body) console.log(`[notify:send] email body preview: ${String(body).slice(0, 200).replace(/\n/g, ' ')}${String(body).length > 200 ? '…' : ''}`)
     return true
   } catch (err) {
-    console.error('[notify] email send error:', err.message || err)
+    console.error('[notify] email send error:', err && err.stack ? err.stack : (err.message || err))
+    // fallback: if SMTP DNS failed (e.g. smtp.example.com) and nodemailer available,
+    // create Ethereal test account and resend once for local testing
+    const msg = String(err && (err.code || err.message || ''))
+    if (nodemailer && /ENOTFOUND|getaddrinfo/i.test(msg)) {
+      try {
+        console.log('[notify] SMTP host unreachable — creating Ethereal test account as fallback')
+        const testAcc = await nodemailer.createTestAccount()
+        const ethTrans = nodemailer.createTransport({
+          host: testAcc.smtp.host,
+          port: testAcc.smtp.port,
+          secure: testAcc.smtp.secure,
+          auth: { user: testAcc.user, pass: testAcc.pass },
+        })
+        const info2 = await ethTrans.sendMail({ from, to, subject, html: htmlBody, text: String(body).replace(/<[^>]+>/g, '') })
+        console.log('[notify] fallback Ethereal send messageId:', info2.messageId)
+        try { const preview2 = nodemailer.getTestMessageUrl(info2); if (preview2) console.log('[notify] fallback preview URL:', preview2) } catch (e) {}
+        return true
+      } catch (er2) {
+        console.error('[notify] fallback send failed:', er2 && er2.stack ? er2.stack : (er2.message || er2))
+        return false
+      }
+    }
     return false
   }
 }
