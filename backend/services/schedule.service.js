@@ -73,7 +73,6 @@ async function deleteSlot(user, slotId) {
   if (!await rbac.canEditChannel(user, slot.channel_id)) {
     throw err(403, 'FORBIDDEN', 'Нет прав');
   }
-  if (slot.is_published) throw err(409, 'SLOT_PUBLISHED', 'Опубликованный слот удалить нельзя — сначала снимите публикацию');
   await slotModel.remove(slotId);
 }
 
@@ -97,7 +96,9 @@ async function publishDay(user, channelId, dateStr) {
 }
 
 async function getGrid({ channelId, from, to, onlyPublished = true }) {
-  if (channelId) return slotModel.listForChannelInRange(channelId, from, to, { onlyPublished });
+  // overlap=true для канального запроса — чтобы редактор видел передачи,
+  // которые начались вчера и переходят через 00:00 в текущий день.
+  if (channelId) return slotModel.listForChannelInRange(channelId, from, to, { onlyPublished, overlap: true });
   return slotModel.listInRange(from, to, { onlyPublished });
 }
 
