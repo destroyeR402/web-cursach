@@ -285,55 +285,46 @@ $(function () {
   // ============================================================
   // ТОГГЛЫ EMAIL / PUSH для передач
   // ============================================================
-  $(document).on('click', '.js-notify', function (e) {
-    var $pill = $(this)
-    // <label> сам триггерит change в checkbox; нам важна логика после
-    // Подождём микротик, чтобы checkbox обновился
-    setTimeout(function () {
-      var $card = $pill.closest('.fav-card-program')
-      var id = parseInt($pill.data('id'), 10)
-      var $email = $card.find('.js-notify[data-channel="email"] input')
-      var $push = $card.find('.js-notify[data-channel="push"]  input')
-      var email = $email.is(':checked')
-      var push = $push.is(':checked')
+  // Обработка переключения уведомлений: реагируем на change самого checkbox,
+  // чтобы избежать двойных срабатываний при клике по <label> и самому <input>.
+  $(document).on('change', '.js-notify input', function (e) {
+    var $input = $(this)
+    var $pill = $input.closest('.js-notify')
+    var $card = $pill.closest('.fav-card-program')
+    var id = parseInt($pill.data('id'), 10)
+    var $email = $card.find('.js-notify[data-channel="email"] input')
+    var $push = $card.find('.js-notify[data-channel="push"]  input')
+    var email = $email.is(':checked')
+    var push = $push.is(':checked')
 
-      $card.find('.js-notify').addClass('disabled').css('pointer-events', 'none')
+    $card.find('.js-notify').addClass('disabled').css('pointer-events', 'none')
 
-      function done() {
-        $card.find('.js-notify').removeClass('disabled').css('pointer-events', '')
-        $card.find('.js-notify[data-channel="email"]').toggleClass('is-on', email)
-        $card.find('.js-notify[data-channel="push"]').toggleClass('is-on', push)
-      }
-      function fail(xhr) {
-        // откатываем
-        $email.prop('checked', !email)
-        $push.prop('checked', !push)
+    function done() {
+      $card.find('.js-notify').removeClass('disabled').css('pointer-events', '')
+      $card.find('.js-notify[data-channel="email"]').toggleClass('is-on', email)
+      $card.find('.js-notify[data-channel="push"]').toggleClass('is-on', push)
+    }
+    function fail(xhr) {
+      // откатываем
+      $email.prop('checked', !email)
+      $push.prop('checked', !push)
+      done()
+      toast(xhrErr(xhr), 'error')
+    }
+
+    if (!email && !push) {
+      // оба выключены — удаляем подписку
+      $.ajax({ url: '/client/api/subscriptions/program/' + id, method: 'DELETE' })
+        .done(function () { toast('Уведомления выключены'); done() })
+        .fail(fail)
+    } else {
+      $.ajax({
+        url: '/client/api/subscriptions', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ type: 'program', targetId: id, notifyEmail: email, notifyPush: push }),
+      }).done(function () {
+        toast(email && push ? 'Email + Push включены' : email ? 'Email включён' : push ? 'Push включён' : 'Уведомления обновлены')
         done()
-        toast(xhrErr(xhr), 'error')
-      }
-
-      if (!email && !push) {
-        // оба выключены — удаляем подписку
-        $.ajax({
-          url: '/client/api/subscriptions/program/' + id,
-          method: 'DELETE',
-        }).done(function () {
-          toast('Уведомления выключены')
-          done()
-        }).fail(fail)
-      } else {
-        $.ajax({
-          url: '/client/api/subscriptions',
-          method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ type: 'program', targetId: id, notifyEmail: email, notifyPush: push }),
-        }).done(function () {
-          toast(email && push ? 'Email + Push включены'
-            : email ? 'Email включён'
-              : push ? 'Push включён' : 'Уведомления обновлены')
-          done()
-        }).fail(fail)
-      }
-    }, 0)
+      }).fail(fail)
+    }
   })
 })
