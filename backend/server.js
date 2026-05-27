@@ -22,6 +22,7 @@ const programRoutes = require('./routes/program.routes')
 const scheduleRoutes = require('./routes/schedule.routes')
 const clientRoutes = require('./routes/client.routes')
 const adminRoutes = require('./routes/admin.routes')
+const reminderScheduler = require('./services/reminder.scheduler')
 
 function formatPgStartupError(err) {
   const raw = String(err?.message || err || 'Неизвестная ошибка')
@@ -101,6 +102,8 @@ async function start() {
   }
   app.listen(PORT, () => {
     console.log(`[server] http://${HOST}:${PORT}  ·  NODE_ENV=${process.env.NODE_ENV || 'development'}`)
+    // start reminders scheduler
+    try { reminderScheduler.start() } catch (e) { console.error('[reminder] failed to start scheduler', e) }
   })
 }
 
