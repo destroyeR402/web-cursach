@@ -67,6 +67,28 @@ async function changeRole(id, roleCode) {
   return findById(id);
 }
 
+async function updatePassword(id, passwordHash) {
+  await query(
+    'UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1',
+    [id, passwordHash]
+  );
+}
+
+async function remove(id) {
+  await query('DELETE FROM users WHERE id = $1', [id]);
+}
+
+async function profileStats(userId) {
+  const { rows } = await query(
+    `SELECT
+       (SELECT COUNT(*)::int FROM favorites     WHERE user_id = $1 AND target_type = 'channel') AS fav_channels,
+       (SELECT COUNT(*)::int FROM favorites     WHERE user_id = $1 AND target_type = 'program') AS fav_programs,
+       (SELECT COUNT(*)::int FROM subscriptions WHERE user_id = $1) AS subs`,
+    [userId]
+  );
+  return rows[0] || { fav_channels: 0, fav_programs: 0, subs: 0 };
+}
+
 async function list({ limit = 50, offset = 0, search = '' } = {}) {
   const params = [limit, offset];
   let where = '';
@@ -91,5 +113,6 @@ function publicFields(u) {
 
 module.exports = {
   findById, findByEmail, findByUsername, create, updateProfile,
-  updateLastLogin, setActive, changeRole, list, count, publicFields,
+  updateLastLogin, setActive, changeRole, updatePassword, remove,
+  profileStats, list, count, publicFields,
 };
