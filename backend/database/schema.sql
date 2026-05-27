@@ -154,6 +154,16 @@ CREATE TABLE subscriptions (
   UNIQUE (user_id, target_type, target_id)
 );
 
+-- ===== Web Push subscriptions =====
+CREATE TABLE push_subscriptions (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL,
+  keys       JSONB NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (endpoint)
+);
+
 -- ===== Журнал аудита =====
 CREATE TABLE audit_logs (
   id          BIGSERIAL PRIMARY KEY,

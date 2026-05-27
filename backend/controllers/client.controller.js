@@ -64,6 +64,26 @@ async function renderDashboard(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function savePushSubscription(req, res, next) {
+  try {
+    const sub = req.body;
+    if (!sub || !sub.endpoint) return fail(res, 400, 'BAD_PAYLOAD', 'Invalid subscription');
+    const pushModel = require('../models/PushSubscription');
+    const row = await pushModel.add(req.user.id, sub);
+    ok(res, { saved: true });
+  } catch (err) { next(err); }
+}
+
+async function removePushSubscription(req, res, next) {
+  try {
+    const endpoint = req.body.endpoint || req.query.endpoint;
+    if (!endpoint) return fail(res, 400, 'BAD_PAYLOAD', 'Invalid endpoint');
+    const pushModel = require('../models/PushSubscription');
+    await pushModel.removeByUserAndEndpoint(req.user.id, endpoint);
+    ok(res, { removed: true });
+  } catch (err) { next(err); }
+}
+
 function parseFavoritesQuery(q, kind) {
   const limitDefault = kind === 'channel' ? 12 : 12;
   return {

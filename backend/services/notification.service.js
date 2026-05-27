@@ -7,6 +7,8 @@ const fs = require('fs')
 const ejs = require('ejs')
 let nodemailer
 try { nodemailer = require('nodemailer') } catch (e) { nodemailer = null }
+let webpush
+try { webpush = require('web-push') } catch (e) { webpush = null }
 
 const queue = []
 
@@ -91,11 +93,11 @@ async function sendEmail(to, subject, body) {
   } catch (err) {
     console.error('[notify] email send error:', err && err.stack ? err.stack : (err.message || err))
     // fallback: controlled by SMTP_FALLBACK env var (values: 'ethereal'|'none').
-    const fallbackMode = (process.env.SMTP_FALLBACK || 'ethereal').toLowerCase();
-    const msg = String(err && (err.code || err.message || ''));
+    const fallbackMode = (process.env.SMTP_FALLBACK || 'ethereal').toLowerCase()
+    const msg = String(err && (err.code || err.message || ''))
     if (fallbackMode === 'none') {
-      console.log('[notify] SMTP fallback disabled by SMTP_FALLBACK=none; not attempting Ethereal resend');
-      return false;
+      console.log('[notify] SMTP fallback disabled by SMTP_FALLBACK=none; not attempting Ethereal resend')
+      return false
     }
     if (nodemailer && /ENOTFOUND|getaddrinfo/i.test(msg)) {
       try {
@@ -109,14 +111,14 @@ async function sendEmail(to, subject, body) {
         })
         const info2 = await ethTrans.sendMail({ from, to, subject, html: htmlBody, text: String(body).replace(/<[^>]+>/g, '') })
         console.log('[notify] fallback Ethereal send messageId:', info2.messageId)
-        try { const preview2 = nodemailer.getTestMessageUrl(info2); if (preview2) console.log('[notify] fallback preview URL:', preview2) } catch (e) {}
+        try { const preview2 = nodemailer.getTestMessageUrl(info2); if (preview2) console.log('[notify] fallback preview URL:', preview2) } catch (e) { }
         return true
       } catch (er2) {
         console.error('[notify] fallback send failed:', er2 && er2.stack ? er2.stack : (er2.message || er2))
         return false
       }
     } else {
-      console.log('[notify] SMTP fallback not applicable for error:', msg);
+      console.log('[notify] SMTP fallback not applicable for error:', msg)
     }
     return false
   }
@@ -176,7 +178,36 @@ async function flush() {
   for (const job of pushJobs) {
     try {
       console.log(`[notify:proc] processing push job -> user:${job.to} reason:${job.subject}`)
-      console.log(`[notify:push] → user:${job.to} · ${job.subject}`)
+      // fetch subscriptions for user
+      if (!webpush) {
+        console.log('[notify:push] web-push not configured (web-push module missing)')
+      } else if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+        console.log('[notify:push] VAPID keys not configured in env; skipping push')
+      } else {
+        try {
+          webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@tv-schedule.local', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY)
+        } catch (e) {
+          console.error('[notify:push] error setting VAPID details:', e && e.stack ? e.stack : e)
+        }
+        const pushModel = require('../models/PushSubscription')
+        const subs = await pushModel.findByUser(job.userId)
+        console.log(`[notify:push] found ${subs.length} subscriptions for user ${job.userId}`)
+        for (const s of subs) {
+          const subObj = { endpoint: s.endpoint, keys: s.keys }
+          const payload = JSON.stringify({ title: job.subject, body: job.body, url: process.env.BASE_URL || '' })
+          try {
+            const resp = await webpush.sendNotification(subObj, payload)
+            console.log(`[notify:push:send] sent to endpoint ${s.endpoint} status`, resp && resp.statusCode ? resp.statusCode : 'ok')
+          } catch (err) {
+            console.error('[notify:push] send error for endpoint', s.endpoint, err && err.stack ? err.stack : err)
+            // remove subscription if gone
+            const code = err && err.statusCode
+            if (code === 410 || code === 404) {
+              try { await pushModel.removeByEndpoint(s.endpoint); console.log('[notify:push] removed stale subscription', s.endpoint) } catch (er2) { console.error('[notify:push] failed to remove stale sub', er2) }
+            }
+          }
+        }
+      }
       await auditLog.log({ userId: job.userId, action: `notify.push`, meta: { subject: job.subject } })
       sent++
     } catch (err) {

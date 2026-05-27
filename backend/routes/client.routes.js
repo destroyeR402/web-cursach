@@ -19,5 +19,7 @@ router.delete('/api/favorites/:type/:targetId', c.removeFavorite);
 router.get('/api/subscriptions',    c.listSubscriptions);
 router.post('/api/subscriptions',   c.addSubscription);
 router.delete('/api/subscriptions/:type/:targetId', c.removeSubscription);
+router.post('/api/push-subscription', c.savePushSubscription);
+router.delete('/api/push-subscription', c.removePushSubscription);
 
 module.exports = router;
