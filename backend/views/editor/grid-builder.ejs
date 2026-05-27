@@ -1,0 +1,245 @@
+<section class="gb-page">
+  <div style="margin-bottom:20px">
+    <div class="eyebrow" style="margin-bottom:8px">Редактор сетки</div>
+    <h1 style="font-size:36px;font-weight:400;letter-spacing:-0.03em;margin:0">
+      Программирование <span style="color:var(--primary);font-weight:300">эфира</span>
+    </h1>
+  </div>
+
+  <%# Toolbar %>
+  <div class="gb-toolbar">
+    <select id="channelSelect" class="input" style="max-width:220px;margin:0">
+      <% channels.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= c.id === currentChannelId ? 'selected' : '' %>><%= c.name %></option>
+      <% }); %>
+    </select>
+
+    <div class="gb-date-nav">
+      <button class="btn btn-sm" id="btnPrev" title="Предыдущий день">‹</button>
+      <input type="date" id="datePicker" value="<%= currentDate %>">
+      <button class="btn btn-sm" id="btnNext" title="Следующий день">›</button>
+      <button class="btn btn-sm" id="btnToday">Сегодня</button>
+    </div>
+
+    <button class="btn btn-primary" id="btnPublish">Опубликовать</button>
+  </div>
+
+  <div class="gb-workspace">
+
+    <%# Левая панель: пул передач %>
+    <div class="gb-pool">
+      <div class="gb-pool-header">
+        <h3>Передачи</h3>
+        <input type="search" id="poolSearch" placeholder="Поиск…" autocomplete="off">
+      </div>
+
+      <div id="addForm" class="gb-add-form" style="display:none">
+        <div id="addFormTitle" class="add-form-prog"></div>
+        <label>Начало
+          <input type="time" id="addFormStart" step="300">
+        </label>
+        <label>Конец <span class="muted">(авто)</span>
+          <input type="time" id="addFormEnd" readonly tabindex="-1">
+        </label>
+        <div class="add-form-btns">
+          <button class="btn btn-primary btn-sm" id="addFormConfirm">Добавить</button>
+          <button class="btn btn-sm" id="addFormCancel">Отмена</button>
+        </div>
+      </div>
+
+      <ul id="programsList">
+        <% programs.forEach(function(p) { %>
+          <li class="program-item"
+              draggable="true"
+              data-program-id="<%= p.id %>"
+              data-duration="<%= p.duration_min || 60 %>"
+              data-title="<%= p.title %>"
+              data-search="<%= (p.title + ' ' + (p.genre_name || '')).toLowerCase() %>">
+            <span class="program-item-title"><%= p.title %></span>
+            <span class="program-item-dur muted"><%= p.duration_min %> мин</span>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+
+    <%# Правая панель: непрерывная временная шкала %>
+    <div class="gb-timeline-wrap">
+      <div class="gb-timeline" id="timeline"
+           data-channel-id="<%= currentChannelId %>"
+           data-date="<%= currentDate %>">
+
+        <% for (let h = 0; h < 24; h++) { %>
+          <div class="gb-hour-mark" style="top:<%= h * 120 %>px">
+            <span class="gb-hour-label"><%= String(h).padStart(2,'0') %>:00</span>
+            <div class="gb-hour-line"></div>
+          </div>
+        <% } %>
+
+        <%
+          // SSR-рендер слотов — таймлайн виден сразу, без ожидания AJAX.
+          // PX_PER_MIN=2, должен совпадать с editor.js
+          function fmtHM(d) {
+            var x = new Date(d);
+            return String(x.getHours()).padStart(2,'0') + ':' + String(x.getMinutes()).padStart(2,'0');
+          }
+          slots.forEach(function(s) {
+            var start = new Date(s.starts_at);
+            var end   = new Date(s.ends_at);
+            var startMin = start.getHours() * 60 + start.getMinutes();
+            var endMin   = end.getHours()   * 60 + end.getMinutes();
+            if (endMin <= startMin) endMin = 1440;
+            var topPx    = startMin * 2;
+            var heightPx = Math.max(10, (endMin - startMin) * 2);
+        %>
+          <div class="gb-slot<%= s.is_published ? ' published' : '' %>"
+               data-slot-id="<%= s.id %>"
+               style="top:<%= topPx %>px;height:<%= heightPx %>px">
+            <div class="gb-slot-body">
+              <span class="gb-slot-time"><%= fmtHM(start) %>–<%= fmtHM(end) %></span>
+              <span class="gb-slot-title"><%= s.program_title %></span>
+            </div>
+            <button class="js-del-slot" title="Удалить">×</button>
+          </div>
+        <% }); %>
+
+        <div class="gb-ghost" id="dragGhost" style="display:none">
+          <span class="ghost-text"></span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <pre id="conflictBox" class="conflict-box" style="display:none"></pre>
+
+</section>
+
+<style>
+  .gb-page { display: flex; flex-direction: column; }
+
+  /* Toolbar */
+  .gb-toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 12px;
+  }
+  .gb-date-nav { display: flex; gap: 4px; align-items: center; }
+  .gb-date-nav #datePicker { width: 150px; margin: 0; padding: 7px 10px; font-size: 12px; font-family: var(--font-mono); }
+
+  /* Workspace */
+  .gb-workspace { display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+
+  /* Pool */
+  .gb-pool {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
+    display: flex; flex-direction: column; max-height: calc(100vh - 220px);
+  }
+  .gb-pool-header h3 { margin: 0 0 10px; font-size: 13px; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  #poolSearch { width: 100%; margin: 0 0 10px; padding: 8px 10px; font-size: 12px; }
+  #programsList { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .program-item {
+    padding: 9px 12px; background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    cursor: grab; display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; border-left: 2px solid transparent; font-size: 12px;
+    transition: border-color 0.12s, background 0.12s; user-select: none;
+  }
+  .program-item:hover { border-left-color: var(--primary); background: var(--surface-3); }
+  .program-item.selected { border-left-color: var(--primary); background: rgba(94,240,255,0.07); }
+  .program-item.dragging { opacity: 0.4; cursor: grabbing; }
+  .program-item-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .program-item-dur { font-family: var(--font-mono); font-size: 10px; white-space: nowrap; flex-shrink: 0; color: var(--muted); }
+
+  /* Add form */
+  .gb-add-form {
+    background: var(--surface-2); border-radius: var(--radius); padding: 12px;
+    margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;
+    border-left: 2px solid var(--primary); flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .add-form-prog { font-weight: 500; font-size: 12px; color: var(--primary); font-family: var(--font-mono); }
+  .gb-add-form label { margin: 0; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  .gb-add-form input[type=time] { padding: 7px 10px; font-size: 12px; font-family: var(--font-mono); width: 100%; margin: 0; }
+  .add-form-btns { display: flex; gap: 6px; }
+
+  /* Timeline wrapper */
+  .gb-timeline-wrap {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
+    overflow-y: auto; max-height: calc(100vh - 220px);
+  }
+
+  /* Timeline */
+  .gb-timeline {
+    position: relative;
+    height: 2880px;
+    margin-left: 52px;
+  }
+  .gb-timeline.drag-active { background: rgba(94,240,255,0.03); }
+
+  /* Hour marks */
+  .gb-hour-mark { position: absolute; left: -52px; right: 0; height: 0; pointer-events: none; }
+  .gb-hour-label {
+    position: absolute; left: 0; top: -9px; width: 46px; text-align: right;
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .gb-hour-line {
+    position: absolute; left: 52px; right: 0; top: 0;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  /* Ghost element */
+  .gb-ghost {
+    position: absolute; left: 0; right: 0; z-index: 10; pointer-events: none;
+    background: rgba(94,240,255,0.15); border: 1px dashed var(--primary);
+    border-radius: var(--radius); padding: 4px 8px;
+    font-size: 11px; font-family: var(--font-mono); color: var(--primary); overflow: hidden; box-sizing: border-box;
+  }
+
+  /* Slot tiles */
+  .gb-slot {
+    position: absolute; left: 0; right: 0;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--primary);
+    color: var(--text); border-radius: var(--radius);
+    padding: 3px 6px 3px 8px; font-size: 12px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 4px; overflow: hidden; z-index: 5; box-sizing: border-box;
+  }
+  .gb-slot.published { border-left-color: var(--success); }
+  .gb-slot-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; }
+  .gb-slot-time { font-size: 10px; opacity: 0.7; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--primary); }
+  .gb-slot-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+  .gb-slot .js-del-slot {
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; flex-shrink: 0;
+    align-self: flex-start;
+  }
+  .gb-slot .js-del-slot:hover { color: var(--danger); }
+
+  .gb-timeline.gb-loading::after {
+    content: 'Загрузка…'; position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+    color: var(--muted); font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .1em; pointer-events: none;
+  }
+  /* Во время перетаскивания: блокируем events на ВСЁМ внутри таймлайна,
+     кроме самого таймлайна — иначе слоты/кнопки/часовые метки крадут drop. */
+  .gb-timeline.gb-drag-active > * { pointer-events: none; }
+  .gb-timeline.gb-drag-active { background: rgba(94,240,255,0.04); outline: 1px dashed rgba(94,240,255,0.3); outline-offset: -1px; }
+
+  .conflict-box {
+    background: var(--danger-soft); border: 1px solid var(--danger);
+    padding: 12px 16px; border-radius: var(--radius); white-space: pre-wrap;
+    margin-top: 12px; font-size: 13px; color: var(--danger);
+  }
+
+  @media (max-width: 800px) {
+    .gb-workspace { grid-template-columns: 1fr; }
+    .gb-pool { max-height: 220px; }
+    .gb-timeline-wrap { max-height: 60vh; }
+  }
+</style>
+
+<script src="/js/roles/editor.js"></script>

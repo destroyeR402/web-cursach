@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<title>Расписание ТВ · Дизайн-система</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="ds.css"/>
+<style>
+  html, body { margin: 0; padding: 0; background: #1A1614; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="chrome.jsx"></script>
+<script type="text/babel" src="screens-public.jsx"></script>
+<script type="text/babel" src="screens-client.jsx"></script>
+<script type="text/babel" src="screens-editor.jsx"></script>
+<script type="text/babel" src="screens-admin.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App() {
+  return (
+    <DesignCanvas
+      title="Расписание ТВ"
+      subtitle="13 экранов · 4 роли · editorial broadcast aesthetic"
+    >
+      <DCSection id="public" title="Публичные · доступны всем">
+        <DCArtboard id="schedule" label="01 · Расписание (/)" width={1280} height={2200}>
+          <ScheduleScreen/>
+        </DCArtboard>
+        <DCArtboard id="login" label="02 · Вход (/auth/login)" width={1280} height={900}>
+          <LoginScreen/>
+        </DCArtboard>
+        <DCArtboard id="register" label="03 · Регистрация (/auth/register)" width={1280} height={960}>
+          <RegisterScreen/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="client" title="Личный кабинет · client / editor / admin">
+        <DCArtboard id="profile" label="04 · Профиль (/auth/profile)" width={1280} height={820}>
+          <ProfileScreen/>
+        </DCArtboard>
+        <DCArtboard id="dashboard" label="05 · Кабинет (/client/dashboard)" width={1280} height={1100}>
+          <DashboardScreen/>
+        </DCArtboard>
+        <DCArtboard id="favorites" label="06 · Избранное (/client/favorites)" width={1280} height={1100}>
+          <FavoritesScreen/>
+        </DCArtboard>
+        <DCArtboard id="subscriptions" label="07 · Подписки (/client/subscriptions)" width={1280} height={780}>
+          <SubscriptionsScreen/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="editor" title="Редактор · editor / admin">
+        <DCArtboard id="grid" label="08 · Сетка (/admin/grid)" width={1280} height={1100}>
+          <GridEditorScreen/>
+        </DCArtboard>
+        <DCArtboard id="programs" label="09 · Передачи (/admin/programs)" width={1280} height={1280}>
+          <ProgramsScreen/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="admin" title="Администрирование · только admin">
+        <DCArtboard id="channels" label="10 · Каналы (/admin/channels)" width={1280} height={1180}>
+          <ChannelsScreen/>
+        </DCArtboard>
+        <DCArtboard id="users" label="11 · Пользователи (/admin/users)" width={1280} height={1000}>
+          <UsersScreen/>
+        </DCArtboard>
+        <DCArtboard id="audit" label="12 · Журнал (/admin/logs)" width={1280} height={1040}>
+          <AuditScreen/>
+        </DCArtboard>
+        <DCArtboard id="error" label="13 · Ошибка (/error)" width={1280} height={780}>
+          <ErrorScreen/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

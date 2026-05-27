@@ -1,0 +1,49 @@
+<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;padding:48px 0;min-height:540px;align-items:center">
+  <!-- Left: hero text -->
+  <div>
+    <div class="eyebrow" style="margin-bottom:18px">Вход в систему</div>
+    <h1 style="font-size:72px;line-height:0.92;font-weight:400;letter-spacing:-0.03em;margin:0">
+      Добро<br><span style="color:var(--primary);font-weight:300">пожаловать</span><br>обратно.
+    </h1>
+    <p style="max-width:380px;margin-top:24px;color:var(--ink-2);font-size:14px;line-height:1.6">
+      Войдите, чтобы продолжить отслеживать любимые каналы,
+      получать уведомления о премьерах и управлять подписками.
+    </p>
+    <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border);display:flex;gap:36px">
+      <div>
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:500">12<span style="color:var(--danger)">k+</span></div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-top:6px">читателей</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:500">84<span style="color:var(--muted);font-size:16px">/сут</span></div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-top:6px">передач в эфире</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: form card -->
+  <div class="card" style="padding:36px">
+    <div class="eyebrow" style="margin-bottom:6px">Form-01</div>
+    <h2 style="margin:0 0 24px;font-size:24px;font-weight:500">Войти</h2>
+    <form method="POST" action="/auth/login" id="loginForm">
+      <input type="hidden" name="next" value="<%= typeof next !== 'undefined' ? next : '/' %>">
+      <div class="col" style="gap:16px">
+        <div>
+          <label class="label">Email или логин</label>
+          <input class="input" type="text" name="identifier" placeholder="ivanov@mail.ru" required autofocus>
+        </div>
+        <div>
+          <label class="label">Пароль</label>
+          <input class="input" type="password" name="password" placeholder="••••••••" required minlength="6">
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <a href="#" style="font-size:12px;color:var(--muted);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Забыли пароль?</a>
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;padding:13px">Войти →</button>
+        <div style="text-align:center;font-size:13px;color:var(--muted);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em">
+          Нет аккаунта? <a href="/auth/register" style="color:var(--text);border-bottom:1px solid var(--border)">Зарегистрируйтесь</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

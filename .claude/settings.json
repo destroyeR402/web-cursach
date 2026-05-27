@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -b /tmp/cookies.txt -o /tmp/favorites.js -w \"HTTP %{http_code} | %{size_download} bytes\\\\n\" http://localhost:3000/js/favorites.js)",
+      "Bash(curl -s -b /tmp/cookies.txt -X POST http://localhost:3000/api/schedule/slots -H \"Content-Type: application/json\" -d '{\"channelId\":5,\"programId\":22,\"startsAt\":\"2026-05-27T20:00:00.000Z\",\"endsAt\":\"2026-05-27T21:30:00.000Z\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(curl -s -b /tmp/cookies.txt -X DELETE http://localhost:3000/api/schedule/slots/1610 -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(sleep 2; curl -s -b /tmp/cookies.txt http://localhost:3000/admin/grid > /tmp/grid2.html && grep -c \"gb-slot\" /tmp/grid2.html)",
+      "Bash(curl -s -I http://localhost:3000/js/roles/editor.js)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;min-height:480px;align-items:center;padding:60px 0">
+  <div>
+    <div class="eyebrow" style="margin-bottom:16px">Ошибка · <%= status %></div>
+    <% if (status === 404) { %>
+      <h1 style="font-size:110px;line-height:0.9;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Канал<br>не <span style="color:var(--primary);font-weight:300">найден</span>.
+      </h1>
+      <p style="max-width:400px;margin-top:24px;font-size:14px;line-height:1.6;color:var(--ink-2)">
+        Запрашиваемая страница временно недоступна или не существует. Возможно, передача снята с эфира.
+      </p>
+    <% } else if (status === 403) { %>
+      <h1 style="font-size:110px;line-height:0.9;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Доступ<br><span style="color:var(--danger);font-weight:300">закрыт</span>.
+      </h1>
+      <p style="max-width:400px;margin-top:24px;font-size:14px;line-height:1.6;color:var(--ink-2)">
+        У вас недостаточно прав для просмотра этой страницы.
+      </p>
+    <% } else { %>
+      <h1 style="font-size:110px;line-height:0.9;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Ошибка<br><span style="color:var(--danger);font-weight:300">сервера</span>.
+      </h1>
+      <p style="max-width:400px;margin-top:24px;font-size:14px;line-height:1.6;color:var(--ink-2)">
+        <%= typeof message !== 'undefined' ? message : 'Что-то пошло не так. Попробуйте обновить страницу.' %>
+      </p>
+    <% } %>
+    <div style="display:flex;gap:10px;margin-top:32px">
+      <a href="/" class="btn btn-primary">← На главную</a>
+      <a href="javascript:history.back()" class="btn">Назад</a>
+    </div>
+  </div>
+
+  <!-- NO SIGNAL panel -->
+  <div>
+    <div style="aspect-ratio:4/3;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;
+      background-image:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(94,240,255,0.03) 3px,rgba(94,240,255,0.03) 4px);
+      position:relative;overflow:hidden">
+      <div style="text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;line-height:2.4;color:var(--muted)">
+        ─── <span style="color:var(--primary)">NO SIGNAL</span> ───<br>
+        · · · · · · · · · ·<br>
+        <span style="color:var(--text);font-size:13px">ERR / <%= status %></span><br>
+        · · · · · · · · · ·<br>
+        <span style="color:var(--danger)">CH-007 OFFLINE</span><br>
+        · · · · · · · · · ·
+      </div>
+      <!-- scanlines -->
+      <div style="position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px)"></div>
+    </div>
+    <div style="font-family:var(--font-mono);margin-top:12px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em">
+      Тестовая таблица настройки · код 0xE<%= status %>
+    </div>
+  </div>
+</div>

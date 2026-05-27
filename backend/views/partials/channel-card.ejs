@@ -1,0 +1,14 @@
+<article class="channel-card">
+  <div class="channel-logo">
+    <% if (channel.logo_path) { %>
+      <img src="<%= channel.logo_path %>" alt="<%= channel.name %>">
+    <% } else { %>
+      <div class="logo-placeholder"><%= channel.name.charAt(0) %></div>
+    <% } %>
+  </div>
+  <div class="channel-info">
+    <h3><%= channel.name %></h3>
+    <% if (channel.category) { %><span class="tag"><%= channel.category %></span><% } %>
+    <% if (channel.description) { %><p class="muted"><%= channel.description %></p><% } %>
+  </div>
+</article>

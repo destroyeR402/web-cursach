@@ -1,0 +1,55 @@
+<div style="display:grid;grid-template-columns:1fr 1.1fr;gap:48px;padding:48px 0;min-height:580px;align-items:center">
+  <!-- Left: form card -->
+  <div class="card" style="padding:36px">
+    <div class="eyebrow" style="margin-bottom:6px">Form-02</div>
+    <h2 style="margin:0 0 24px;font-size:24px;font-weight:500">Регистрация</h2>
+    <form method="POST" action="/auth/register" id="registerForm">
+      <div class="col" style="gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label class="label">Email</label>
+            <input class="input" type="email" name="email" placeholder="you@mail.ru" required autofocus>
+          </div>
+          <div>
+            <label class="label">Логин</label>
+            <input class="input" type="text" name="username" placeholder="username" pattern="[a-zA-Z0-9_.\-]{3,32}" required>
+          </div>
+        </div>
+        <div>
+          <label class="label">Отображаемое имя</label>
+          <input class="input" type="text" name="displayName" placeholder="Анна Иванова" maxlength="128">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label class="label">Пароль</label>
+            <input class="input" type="password" name="password" placeholder="••••••" minlength="6" required>
+          </div>
+          <div>
+            <label class="label">Повторите</label>
+            <input class="input" type="password" name="passwordConfirm" placeholder="••••••">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;padding:13px;margin-top:6px">Создать аккаунт →</button>
+        <div style="text-align:center;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">
+          Уже есть аккаунт? <a href="/auth/login" style="color:var(--text);border-bottom:1px solid var(--border)">Войти</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Right: hero text -->
+  <div>
+    <div class="eyebrow" style="margin-bottom:18px">Новый читатель</div>
+    <h1 style="font-size:64px;line-height:0.92;font-weight:400;letter-spacing:-0.03em;margin:0">
+      Создайте<br>свой <span style="color:var(--primary);font-weight:300">эфирный</span><br>билет.
+    </h1>
+    <ul style="margin-top:32px;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px;max-width:380px">
+      <% [['I','Подписка на любимые каналы и оповещения о премьерах'],['II','Персональная лента «Сегодня в эфире»'],['III','Сохранение передач и каналов в избранное']].forEach(function(item){ %>
+        <li style="display:grid;grid-template-columns:36px 1fr;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)">
+          <span style="font-family:var(--font-mono);font-size:24px;color:var(--primary);line-height:1;font-weight:300"><%= item[0] %>.</span>
+          <span style="font-size:13px;color:var(--ink-2);line-height:1.55;padding-top:2px"><%= item[1] %></span>
+        </li>
+      <% }); %>
+    </ul>
+  </div>
+</div>

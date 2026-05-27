@@ -1,0 +1,51 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Env
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage / build
+coverage/
+dist/
+build/
+.nyc_output/
+
+# Uploads (хранилище загруженных пользователями файлов)
+backend/public/uploads/
+backend/public/images/channels/*
+backend/public/images/programs/*
+backend/public/images/avatars/*
+!backend/public/images/channels/.gitkeep
+!backend/public/images/programs/.gitkeep
+!backend/public/images/avatars/.gitkeep
+# но базовые SVG-превьюшки оставляем под контролем версий
+!backend/public/images/channels/*.svg
+!backend/public/images/programs/*.svg
+
+# DB dumps / backups
+*.sql.bak
+*.dump
+backups/
+
+# Temp
+tmp/
+temp/

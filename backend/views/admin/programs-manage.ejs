@@ -1,0 +1,294 @@
+<section class="programs-manage">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px">
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Каталог</div>
+      <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Передачи <span style="font-family:var(--font-mono);font-size:16px;color:var(--muted);font-weight:400" id="programCount">· <%= programs.length %></span>
+      </h1>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('formBlock').open=true">+ Добавить передачу</button>
+  </div>
+
+  <details id="formBlock" style="margin-bottom:24px">
+    <summary style="cursor:pointer;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);list-style:none;padding:14px 18px;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--radius)">
+      <strong id="formTitle" style="color:var(--primary)">+ Добавить передачу</strong>
+    </summary>
+    <form id="programForm" enctype="multipart/form-data">
+      <input type="hidden" name="_id" value="">
+      <div class="form-grid">
+        <label>Название <span class="req">*</span>
+          <input type="text" name="title" required maxlength="255">
+        </label>
+        <label>Длительность (мин) <span class="req">*</span>
+          <input type="number" name="durationMin" required min="1" max="600" value="60">
+        </label>
+        <label>Жанр
+          <select name="genreId">
+            <option value="">— не указан —</option>
+            <% genres.forEach(function(g) { %>
+              <option value="<%= g.id %>"><%= g.name %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label>Возрастная категория
+          <select name="ageRatingId">
+            <option value="">— не указана —</option>
+            <% ageRatings.forEach(function(a) { %>
+              <option value="<%= a.id %>"><%= a.code %> · <%= a.description %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label class="span-2">Описание
+          <textarea name="description" rows="3" maxlength="1000"></textarea>
+        </label>
+        <label>Постер (PNG/JPEG/WEBP, до 5 МБ)
+          <input type="file" name="poster" accept="image/png,image/jpeg,image/webp" id="posterInput">
+        </label>
+        <div class="poster-preview-block">
+          <img id="posterPreview" class="poster-preview" alt="" style="display:none">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btnSubmit">Создать</button>
+        <button type="button" class="btn" id="btnReset">Сбросить</button>
+      </div>
+    </form>
+  </details>
+
+  <div class="table-controls">
+    <input type="search" id="programSearch" placeholder="Поиск по названию / жанру…">
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+  <table class="data-table" id="programsTable">
+    <thead>
+      <tr>
+        <th>Постер</th><th>Название</th><th>Жанр</th><th>Возраст</th><th>Длительность</th><th>Описание</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="programsTbody">
+      <% programs.forEach(function(p) { %>
+        <tr data-id="<%= p.id %>"
+            data-title="<%= p.title %>"
+            data-description="<%= p.description || '' %>"
+            data-duration="<%= p.duration_min %>"
+            data-genre-id="<%= p.genre_id || '' %>"
+            data-age-id="<%= p.age_rating_id || '' %>"
+            data-search="<%= (p.title + ' ' + (p.genre_name || '') + ' ' + (p.age_code || '')).toLowerCase() %>">
+          <td>
+            <% if (p.poster_path) { %>
+              <img src="<%= p.poster_path %>" class="thumb-poster" alt="">
+            <% } else { %>
+              <div class="thumb-placeholder"><%= p.title.charAt(0) %></div>
+            <% } %>
+          </td>
+          <td><strong><%= p.title %></strong></td>
+          <td><%= p.genre_name || '—' %></td>
+          <td><%= p.age_code || '—' %></td>
+          <td><%= p.duration_min %> мин</td>
+          <td class="desc-cell"><%= p.description || '' %></td>
+          <td class="actions-cell">
+            <button class="btn btn-sm js-edit" data-id="<%= p.id %>">✎</button>
+            <button class="btn btn-sm btn-danger js-del" data-id="<%= p.id %>">×</button>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); }
+  .form-grid .span-2 { grid-column: span 2; }
+  .form-grid label { margin: 0; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .16em; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+  .form-grid label::before { content: "// "; color: var(--primary); opacity: .6; }
+  .form-grid input, .form-grid select, .form-grid textarea { margin: 0; }
+  .form-actions { padding: 14px 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: 1px solid var(--border-soft); display: flex; gap: 8px; }
+  .poster-preview { max-width: 90px; max-height: 120px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .thumb-poster { width: 36px; height: 50px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); }
+  .thumb-placeholder { width: 36px; height: 50px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--primary); }
+  .desc-cell { max-width: 220px; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .actions-cell { white-space: nowrap; text-align: right; }
+  .req { color: var(--danger); }
+  .table-controls { display: flex; align-items: center; gap: 12px; margin: 16px 0 10px; flex-wrap: wrap; }
+  .table-controls #programSearch { flex: 1; min-width: 200px; margin: 0; }
+  #formBlock summary::-webkit-details-marker { display: none; }
+  @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: span 1; } }
+</style>
+
+<script>
+$(function () {
+  var $form    = $('#programForm');
+  var $title   = $('#formTitle');
+  var $submit  = $('#btnSubmit');
+  var $preview = $('#posterPreview');
+  var $block   = $('#formBlock');
+
+  // === Пагинация ===
+  var PAGE_SIZE = 25;
+  var currentPage = 1;
+  var filterQ = '';
+
+  function allRows() { return $('#programsTbody tr'); }
+
+  function filteredRows() {
+    return allRows().filter(function () {
+      return !filterQ || ($(this).data('search') || '').indexOf(filterQ) !== -1;
+    });
+  }
+
+  function renderPage() {
+    var $rows = filteredRows();
+    var total = $rows.length;
+    var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > pages) currentPage = pages;
+
+    allRows().hide();
+    $rows.each(function (i) {
+      if (i >= (currentPage - 1) * PAGE_SIZE && i < currentPage * PAGE_SIZE) {
+        $(this).show();
+      }
+    });
+
+    var $pag = $('#pagination').empty();
+    if (pages <= 1) { $pag.append('<span class="page-info">' + total + ' записей</span>'); return; }
+    $pag.append('<span class="page-info">' + total + ' записей</span>');
+    $('<button class="btn">‹</button>').prop('disabled', currentPage === 1)
+      .on('click', function () { currentPage--; renderPage(); }).appendTo($pag);
+    for (var p = 1; p <= pages; p++) {
+      $('<button class="btn' + (p === currentPage ? ' active' : '') + '">' + p + '</button>')
+        .data('p', p).on('click', function () { currentPage = $(this).data('p'); renderPage(); }).appendTo($pag);
+    }
+    $('<button class="btn">›</button>').prop('disabled', currentPage === pages)
+      .on('click', function () { currentPage++; renderPage(); }).appendTo($pag);
+  }
+
+  renderPage();
+
+  $('#programSearch').on('input', function () {
+    filterQ = this.value.toLowerCase().trim();
+    currentPage = 1;
+    renderPage();
+  });
+
+  // === Вспомогательные функции ===
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function buildRow(p) {
+    var poster = p.poster_path
+      ? '<img src="' + p.poster_path + '" class="thumb-poster" alt="">'
+      : '<div class="thumb-placeholder">' + esc(p.title.charAt(0)) + '</div>';
+    var search = esc((p.title + ' ' + (p.genre_name || '') + ' ' + (p.age_code || '')).toLowerCase());
+    return '<tr data-id="' + p.id + '" data-title="' + esc(p.title) + '"' +
+      ' data-description="' + esc(p.description || '') + '"' +
+      ' data-duration="' + p.duration_min + '"' +
+      ' data-genre-id="' + esc(p.genre_id || '') + '"' +
+      ' data-age-id="' + esc(p.age_rating_id || '') + '"' +
+      ' data-search="' + search + '">' +
+      '<td>' + poster + '</td>' +
+      '<td><strong>' + esc(p.title) + '</strong></td>' +
+      '<td>' + esc(p.genre_name || '—') + '</td>' +
+      '<td>' + esc(p.age_code || '—') + '</td>' +
+      '<td>' + p.duration_min + ' мин</td>' +
+      '<td class="desc-cell">' + esc(p.description || '') + '</td>' +
+      '<td class="actions-cell">' +
+        '<button class="btn btn-sm js-edit" data-id="' + p.id + '">✎</button> ' +
+        '<button class="btn btn-sm btn-danger js-del" data-id="' + p.id + '">×</button>' +
+      '</td></tr>';
+  }
+
+  function resetForm() {
+    $form[0].reset();
+    $form.find('[name=_id]').val('');
+    $title.text('+ Добавить передачу');
+    $submit.text('Создать');
+    $preview.hide();
+  }
+
+  function updateCount() {
+    $('#programCount').text('Всего передач: ' + allRows().length);
+  }
+
+  // === Превью постера ===
+  $('#posterInput').on('change', function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) { $preview.hide(); return; }
+    var r = new FileReader();
+    r.onload = function (ev) { $preview.attr('src', ev.target.result).show(); };
+    r.readAsDataURL(f);
+  });
+
+  // === Редактирование ===
+  $(document).on('click', '.js-edit', function () {
+    var $row = $(this).closest('tr');
+    $form.find('[name=_id]').val($row.data('id'));
+    $form.find('[name=title]').val($row.data('title'));
+    $form.find('[name=description]').val($row.data('description'));
+    $form.find('[name=durationMin]').val($row.data('duration'));
+    $form.find('[name=genreId]').val($row.data('genre-id') || '');
+    $form.find('[name=ageRatingId]').val($row.data('age-id') || '');
+    $title.text('Редактировать передачу #' + $row.data('id'));
+    $submit.text('Сохранить');
+    $block.attr('open', 'open');
+    $('html, body').animate({ scrollTop: $form.offset().top - 80 }, 200);
+  });
+
+  // === Удаление ===
+  $(document).on('click', '.js-del', function () {
+    var id = $(this).data('id');
+    if (!confirm('Архивировать передачу #' + id + '?')) return;
+    var $btn = $(this).prop('disabled', true);
+    $.ajax({ url: '/api/programs/' + id, method: 'DELETE' })
+      .done(function () {
+        $btn.closest('tr').remove();
+        updateCount();
+        renderPage();
+        toast('Передача архивирована');
+      })
+      .fail(function (xhr) {
+        $btn.prop('disabled', false);
+        toast(xhrErr(xhr), 'error');
+      });
+  });
+
+  // === Сброс формы ===
+  $('#btnReset').on('click', resetForm);
+
+  // === Отправка формы ===
+  $form.on('submit', function (e) {
+    e.preventDefault();
+    var id = $form.find('[name=_id]').val();
+    var fd = new FormData(this);
+    fd.delete('_id');
+    var method = id ? 'PATCH' : 'POST';
+    var url    = id ? ('/api/programs/' + id) : '/api/programs';
+
+    $submit.prop('disabled', true).text(id ? 'Сохранение…' : 'Создание…');
+
+    $.ajax({ url: url, method: method, data: fd, processData: false, contentType: false })
+      .done(function (resp) {
+        var p = resp.data;
+        if (id) {
+          $('#programsTbody tr[data-id="' + id + '"]').replaceWith(buildRow(p));
+          toast('Передача «' + p.title + '» обновлена');
+        } else {
+          $('#programsTbody').prepend(buildRow(p));
+          updateCount();
+          toast('Передача «' + p.title + '» создана');
+        }
+        renderPage();
+        resetForm();
+        $block.removeAttr('open');
+      })
+      .fail(function (xhr) {
+        toast(xhrErr(xhr), 'error');
+      })
+      .always(function () {
+        $submit.prop('disabled', false).text(id ? 'Сохранить' : 'Создать');
+      });
+  });
+});
+</script>

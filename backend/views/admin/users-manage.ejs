@@ -1,0 +1,52 @@
+<section class="admin-users">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px">
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Администрирование · Пользователи</div>
+      <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">Пользователи</h1>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <input type="search" id="userSearch" placeholder="Email, логин, имя…" class="input" style="width:260px">
+      <div class="pagination" id="usersPagination"></div>
+    </div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+  <table class="data-table">
+    <thead>
+      <tr><th>ID</th><th>Email</th><th>Логин</th><th>Имя</th><th>Роль</th><th>Активен</th><th>Создан</th><th></th></tr>
+    </thead>
+    <tbody id="usersTbody">
+    <% users.forEach(function(u) { %>
+      <tr data-id="<%= u.id %>" data-search="<%= (u.email + ' ' + u.username + ' ' + (u.display_name||'')).toLowerCase() %>">
+        <td><%= u.id %></td>
+        <td><%= u.email %></td>
+        <td><%= u.username %></td>
+        <td><%= u.display_name || '—' %></td>
+        <td>
+          <select class="js-role" data-id="<%= u.id %>">
+            <% roles.forEach(function(r) { %>
+              <option value="<%= r.code %>" <%= u.role === r.code ? 'selected' : '' %>><%= r.name %></option>
+            <% }); %>
+          </select>
+        </td>
+        <td>
+          <input type="checkbox" class="js-active" data-id="<%= u.id %>" <%= u.is_active ? 'checked' : '' %>>
+        </td>
+        <td><%= new Date(u.created_at).toLocaleDateString('ru-RU') %></td>
+        <td>
+          <% if (u.role === 'editor') { %>
+            <select class="js-assign" data-user-id="<%= u.id %>">
+              <option value="">— закрепить за каналом —</option>
+              <% channels.forEach(function(c) { %>
+                <option value="<%= c.id %>"><%= c.name %></option>
+              <% }); %>
+            </select>
+          <% } %>
+        </td>
+      </tr>
+    <% }); %>
+    </tbody>
+  </table>
+  </div>
+</section>
+<script src="/js/roles/admin.js"></script>

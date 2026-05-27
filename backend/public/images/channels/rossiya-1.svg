@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#fff"/>
+  <rect y="0" width="200" height="67" fill="#fff"/>
+  <rect y="67" width="200" height="66" fill="#0033a0"/>
+  <rect y="133" width="200" height="67" fill="#d52b1e"/>
+  <circle cx="100" cy="100" r="58" fill="#fff" opacity="0.95"/>
+  <text x="100" y="115" font-family="Arial Black, sans-serif" font-size="56" font-weight="900" fill="#0033a0" text-anchor="middle">Р·1</text>
+</svg>

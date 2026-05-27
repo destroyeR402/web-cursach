@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff6f00"/>
+      <stop offset="1" stop-color="#e65100"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#g)"/>
+  <circle cx="100" cy="80" r="36" fill="#fff"/>
+  <path d="M 100 50 L 110 70 L 130 70 L 115 85 L 120 105 L 100 95 L 80 105 L 85 85 L 70 70 L 90 70 Z" fill="#1b5e20"/>
+  <text x="100" y="160" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" fill="#fff" text-anchor="middle">МАТЧ</text>
+  <text x="100" y="185" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#fff" text-anchor="middle" letter-spacing="3">ТВ</text>
+</svg>

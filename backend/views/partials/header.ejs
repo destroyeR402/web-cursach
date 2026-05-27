@@ -1,0 +1,65 @@
+<header class="site-header">
+  <!-- Status strip -->
+  <div class="header-strip">
+    <div><span class="strip-dot"></span>NODE.01 // ONLINE · <span id="headerClock"></span></div>
+    <div>FEEDS: 5 · UPLINK: STABLE · UTC+3</div>
+  </div>
+  <!-- Main row -->
+  <div class="container header-row">
+    <a class="brand" href="/">
+      <span class="brand-main">РАСПИСАНИЕ<span class="brand-dot">/</span>ТВ</span>
+      <span class="brand-sub">BROADCAST.OPS &nbsp;//&nbsp; v 3.41.0</span>
+    </a>
+
+    <nav class="main-nav">
+      <a href="/" <%= typeof active !== 'undefined' && active === 'schedule' ? 'class="active"' : '' %>>Расписание</a>
+      <% if (user) { %>
+        <% if (user.role === 'client' || user.role === 'editor' || user.role === 'admin') { %>
+          <a href="/client/dashboard" <%= typeof active !== 'undefined' && active === 'dashboard' ? 'class="active"' : '' %>>Кабинет</a>
+          <a href="/client/favorites" <%= typeof active !== 'undefined' && active === 'favorites' ? 'class="active"' : '' %>>Избранное</a>
+          <a href="/client/subscriptions" <%= typeof active !== 'undefined' && active === 'subs' ? 'class="active"' : '' %>>Подписки</a>
+        <% } %>
+        <% if (user.role === 'editor' || user.role === 'admin') { %>
+          <a href="/admin/grid" <%= typeof active !== 'undefined' && active === 'grid' ? 'class="active"' : '' %>>Сетка</a>
+          <a href="/admin/programs" <%= typeof active !== 'undefined' && active === 'programs' ? 'class="active"' : '' %>>Передачи</a>
+        <% } %>
+        <% if (user.role === 'admin') { %>
+          <a href="/admin/channels" <%= typeof active !== 'undefined' && active === 'channels' ? 'class="active"' : '' %>>Каналы</a>
+          <a href="/admin/users" <%= typeof active !== 'undefined' && active === 'users' ? 'class="active"' : '' %>>Пользователи</a>
+          <a href="/admin/logs" <%= typeof active !== 'undefined' && active === 'logs' ? 'class="active"' : '' %>>Журнал</a>
+        <% } %>
+      <% } %>
+    </nav>
+
+    <div class="user-box">
+      <% if (user) { %>
+        <div class="user-info">
+          <b id="headerUserName"><%= user.display_name || user.username %></b>
+          <small class="role-badge role-<%= user.role %>"><%= user.role %></small>
+        </div>
+        <a href="/auth/profile" class="avatar-box" title="Профиль">
+          <%= (user.display_name || user.username).charAt(0).toUpperCase() %>
+        </a>
+        <form method="POST" action="/auth/logout" style="display:inline;margin:0">
+          <button class="btn btn-sm" style="border-color:rgba(255,51,85,0.4);color:var(--muted)">Выйти</button>
+        </form>
+      <% } else { %>
+        <a href="/auth/register" class="btn btn-sm">Регистрация</a>
+        <a href="/auth/login" class="btn btn-sm btn-primary">Войти</a>
+      <% } %>
+    </div>
+  </div>
+</header>
+<script>
+(function(){
+  function pad(n){return String(n).padStart(2,'0');}
+  function tick(){
+    var d=new Date();
+    var days=['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
+    document.getElementById('headerClock').textContent=
+      days[d.getDay()]+' · '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear()+
+      ' · '+pad(d.getHours())+':'+pad(d.getMinutes())+' MSK';
+  }
+  tick(); setInterval(tick,30000);
+})();
+</script>

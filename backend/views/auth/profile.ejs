@@ -1,0 +1,98 @@
+<section class="profile-page">
+  <div class="eyebrow" style="margin-bottom:8px">Аккаунт</div>
+  <h1 style="font-size:48px;font-weight:400;letter-spacing:-0.03em;margin:0 0 28px">
+    Личные <span style="color:var(--primary);font-weight:300">данные</span>
+  </h1>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <!-- Identity card -->
+    <div class="card" style="padding:28px">
+      <div class="eyebrow" style="margin-bottom:16px">Карточка читателя · ID <%= String(user.id).padStart(5,'0') %></div>
+      <div style="display:grid;grid-template-columns:88px 1fr;gap:20px;align-items:start">
+        <div>
+          <% if (user.avatar_path) { %>
+            <img id="avatarPreview" class="avatar" style="width:88px;height:88px;border-radius:var(--radius)" src="<%= user.avatar_path %>" alt="">
+          <% } else { %>
+            <div id="avatarPreview" class="avatar avatar-placeholder" style="width:88px;height:88px;border-radius:var(--radius);font-size:2rem;background:var(--surface-3);border:1px solid var(--border)"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
+          <% } %>
+        </div>
+        <dl style="margin:0;display:grid;grid-template-columns:90px 1fr;row-gap:8px;column-gap:12px;font-size:13px;align-items:start">
+          <dt style="margin:0">Email</dt><dd style="margin:0"><%= user.email %></dd>
+          <dt style="margin:0">Логин</dt><dd style="margin:0"><%= user.username %></dd>
+          <dt style="margin:0">Имя</dt><dd style="margin:0" id="profileDisplayName"><%= user.display_name || '—' %></dd>
+          <dt style="margin:0">Роль</dt><dd style="margin:0"><span class="tag role-badge role-<%= user.role %>"><%= user.role %></span></dd>
+          <dt style="margin:0">Создан</dt><dd style="margin:0;font-family:var(--font-mono);font-size:11px"><%= new Date(user.created_at).toLocaleString('ru-RU') %></dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Update form -->
+    <div class="card" style="padding:28px">
+      <div class="eyebrow" style="margin-bottom:16px">Редактировать профиль</div>
+      <form id="profileForm" enctype="multipart/form-data">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <label class="label">Отображаемое имя</label>
+            <input class="input" type="text" name="displayName" value="<%= user.display_name || '' %>" maxlength="128" placeholder="Имя для отображения">
+          </div>
+          <div>
+            <label class="label">Аватар</label>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div class="avatar avatar-placeholder" style="width:56px;height:56px;border-radius:var(--radius);font-size:1.2rem;background:var(--surface-3);border:1px solid var(--border);flex-shrink:0"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp" id="avatarInput" class="input" style="font-size:11px;padding:7px 10px">
+                <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em">PNG / JPG / WEBP · до 5 МБ</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;padding-top:8px">
+            <button type="submit" id="btnSave" class="btn btn-primary">Сохранить</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+$(function () {
+  $('#avatarInput').on('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function (ev) {
+      $('#avatarPreview').replaceWith('<img id="avatarPreview" class="avatar" src="' + ev.target.result + '">');
+    };
+    r.readAsDataURL(f);
+  });
+
+  $('#profileForm').on('submit', function (e) {
+    e.preventDefault();
+    var $btn = $('#btnSave').prop('disabled', true).text('Сохранение…');
+    var fd = new FormData(this);
+
+    $.ajax({
+      url: '/auth/profile',
+      method: 'PATCH',
+      data: fd,
+      processData: false,
+      contentType: false,
+    }).done(function (resp) {
+      var u = resp.data && resp.data.user;
+      if (u) {
+        var name = u.display_name || u.username || '—';
+        $('#profileDisplayName').text(u.display_name || '—');
+        $('#headerUserName').text(name);
+        if (u.avatar_path) {
+          $('#avatarPreview').replaceWith('<img id="avatarPreview" class="avatar" src="' + u.avatar_path + '?t=' + Date.now() + '">');
+        }
+      }
+      toast('Профиль успешно обновлён');
+    }).fail(function (xhr) {
+      toast(xhrErr(xhr), 'error');
+    }).always(function () {
+      $btn.prop('disabled', false).text('Сохранить');
+    });
+  });
+});
+</script>

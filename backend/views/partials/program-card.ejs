@@ -1,0 +1,14 @@
+<article class="program-card">
+  <% if (program.poster_path) { %>
+    <img class="program-poster" src="<%= program.poster_path %>" alt="<%= program.title %>">
+  <% } %>
+  <div class="program-info">
+    <h4><%= program.title %></h4>
+    <div class="program-meta">
+      <% if (program.genre_name) { %><span class="tag"><%= program.genre_name %></span><% } %>
+      <% if (program.age_code) { %><span class="tag age"><%= program.age_code %></span><% } %>
+      <% if (program.duration_min) { %><span class="muted"><%= program.duration_min %> мин</span><% } %>
+    </div>
+    <% if (program.description) { %><p class="muted"><%= program.description %></p><% } %>
+  </div>
+</article>

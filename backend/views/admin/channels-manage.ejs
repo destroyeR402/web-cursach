@@ -1,0 +1,222 @@
+<section class="channels-manage">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px">
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Администрирование · Каналы</div>
+      <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">
+        Каналы <span style="font-family:var(--font-mono);font-size:18px;color:var(--muted);font-weight:400" id="channelCount">· <%= channels.length %></span>
+      </h1>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('formBlock').open=true">+ Добавить канал</button>
+  </div>
+
+  <details id="formBlock" style="margin-bottom:24px">
+    <summary style="cursor:pointer;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);list-style:none;padding:14px 18px;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--radius)">
+      <strong id="formTitle" style="color:var(--primary)">+ Добавить канал</strong>
+    </summary>
+    <form id="channelForm" enctype="multipart/form-data">
+      <input type="hidden" name="_id" value="">
+      <div class="form-grid">
+        <label>Название <span class="req">*</span>
+          <input type="text" name="name" required maxlength="128">
+        </label>
+        <label>Slug (URL-идентификатор)
+          <input type="text" name="slug" placeholder="auto из названия" pattern="[a-z0-9-]+">
+        </label>
+        <label>Категория
+          <input type="text" name="category" placeholder="эфирный / спорт / детский" maxlength="64">
+        </label>
+        <label>Активен
+          <select name="isActive">
+            <option value="true">Да</option>
+            <option value="false">Нет</option>
+          </select>
+        </label>
+        <label class="span-2">Описание
+          <textarea name="description" rows="3" maxlength="500"></textarea>
+        </label>
+        <label>Логотип (PNG/JPEG/WEBP, до 5 МБ)
+          <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" id="logoInput">
+        </label>
+        <div class="logo-preview-block">
+          <img id="logoPreview" class="logo-preview" alt="" style="display:none">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btnSubmit">Создать</button>
+        <button type="button" class="btn" id="btnReset">Сбросить</button>
+      </div>
+    </form>
+  </details>
+
+  <div class="card" style="overflow:hidden">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Лого</th><th>Название</th><th>Slug</th><th>Категория</th><th>Активен</th><th>Описание</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="channelsTbody">
+      <% channels.forEach(function(c) { %>
+        <tr data-id="<%= c.id %>"
+            data-name="<%= c.name %>"
+            data-slug="<%= c.slug %>"
+            data-category="<%= c.category || '' %>"
+            data-description="<%= c.description || '' %>"
+            data-active="<%= c.is_active ? 'true' : 'false' %>">
+          <td>
+            <% if (c.logo_path) { %>
+              <img src="<%= c.logo_path %>" class="thumb">
+            <% } else { %>
+              <div class="thumb-placeholder"><%= c.name.charAt(0) %></div>
+            <% } %>
+          </td>
+          <td><strong><%= c.name %></strong></td>
+          <td><code><%= c.slug %></code></td>
+          <td><%= c.category || '—' %></td>
+          <td><%= c.is_active ? '✔' : '×' %></td>
+          <td class="desc-cell"><%= c.description || '' %></td>
+          <td class="actions-cell">
+            <button class="btn btn-sm js-edit" data-id="<%= c.id %>">✎</button>
+            <button class="btn btn-sm btn-danger js-del" data-id="<%= c.id %>">×</button>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<style>
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); }
+  .form-grid .span-2 { grid-column: span 2; }
+  .form-grid label { margin: 0; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .16em; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+  .form-grid label::before { content: "// "; color: var(--primary); opacity: .6; }
+  .form-grid input, .form-grid select, .form-grid textarea { margin: 0; }
+  .form-actions { padding: 14px 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: 1px solid var(--border-soft); display: flex; gap: 8px; }
+  .logo-preview { max-width: 100px; max-height: 100px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .thumb-placeholder { width: 40px; height: 40px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600; color: var(--primary); }
+  .desc-cell { max-width: 280px; color: var(--muted); font-size: 12px; }
+  .actions-cell { white-space: nowrap; text-align: right; }
+  .req { color: var(--danger); }
+  code { background: var(--surface-2); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; font-size: 11px; font-family: var(--font-mono); color: var(--ink-2); }
+  @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: span 1; } }
+  #formBlock summary::-webkit-details-marker { display: none; }
+</style>
+
+<script>
+$(function () {
+  var $form   = $('#channelForm');
+  var $title  = $('#formTitle');
+  var $submit = $('#btnSubmit');
+  var $preview = $('#logoPreview');
+  var $block  = $('#formBlock');
+
+  function countText(n) { return 'Всего каналов: ' + n; }
+  function rowCount() { return $('#channelsTbody tr').length; }
+
+  function buildRow(c) {
+    var logo = c.logo_path
+      ? '<img src="' + c.logo_path + '" class="thumb">'
+      : '<div class="thumb-placeholder">' + c.name.charAt(0) + '</div>';
+    return '<tr data-id="' + c.id + '" data-name="' + esc(c.name) + '" data-slug="' + esc(c.slug) + '"' +
+      ' data-category="' + esc(c.category || '') + '" data-description="' + esc(c.description || '') + '"' +
+      ' data-active="' + (c.is_active ? 'true' : 'false') + '">' +
+      '<td>' + logo + '</td>' +
+      '<td><strong>' + esc(c.name) + '</strong></td>' +
+      '<td><code>' + esc(c.slug) + '</code></td>' +
+      '<td>' + esc(c.category || '—') + '</td>' +
+      '<td>' + (c.is_active ? '✔' : '×') + '</td>' +
+      '<td class="desc-cell">' + esc(c.description || '') + '</td>' +
+      '<td class="actions-cell">' +
+        '<button class="btn btn-sm js-edit" data-id="' + c.id + '">✎</button> ' +
+        '<button class="btn btn-sm btn-danger js-del" data-id="' + c.id + '">×</button>' +
+      '</td></tr>';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function resetForm() {
+    $form[0].reset();
+    $form.find('[name=_id]').val('');
+    $form.find('[name=slug]').prop('disabled', false);
+    $title.text('+ Добавить канал');
+    $submit.text('Создать');
+    $preview.hide();
+  }
+
+  $('#logoInput').on('change', function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) { $preview.hide(); return; }
+    var r = new FileReader();
+    r.onload = function (ev) { $preview.attr('src', ev.target.result).show(); };
+    r.readAsDataURL(f);
+  });
+
+  $(document).on('click', '.js-edit', function () {
+    var $row = $(this).closest('tr');
+    $form.find('[name=_id]').val($row.data('id'));
+    $form.find('[name=name]').val($row.data('name'));
+    $form.find('[name=slug]').val($row.data('slug')).prop('disabled', true);
+    $form.find('[name=category]').val($row.data('category'));
+    $form.find('[name=description]').val($row.data('description'));
+    $form.find('[name=isActive]').val(String($row.data('active')));
+    $title.text('Редактировать канал #' + $row.data('id'));
+    $submit.text('Сохранить');
+    $block.attr('open', 'open');
+    $('html, body').animate({ scrollTop: $form.offset().top - 80 }, 200);
+  });
+
+  $(document).on('click', '.js-del', function () {
+    var id = $(this).data('id');
+    if (!confirm('Удалить канал #' + id + '? Все его слоты тоже удалятся.')) return;
+    var $btn = $(this).prop('disabled', true);
+    $.ajax({ url: '/api/channels/' + id, method: 'DELETE' })
+      .done(function () {
+        $btn.closest('tr').remove();
+        $('#channelCount').text(countText(rowCount()));
+        toast('Канал удалён');
+      })
+      .fail(function (xhr) {
+        $btn.prop('disabled', false);
+        toast(xhrErr(xhr), 'error');
+      });
+  });
+
+  $('#btnReset').on('click', resetForm);
+
+  $form.on('submit', function (e) {
+    e.preventDefault();
+    var id     = $form.find('[name=_id]').val();
+    var fd     = new FormData(this);
+    var method = id ? 'PATCH' : 'POST';
+    var url    = id ? ('/api/channels/' + id) : '/api/channels';
+    fd.delete('_id');
+    if (id) fd.delete('slug');
+
+    $submit.prop('disabled', true).text(id ? 'Сохранение…' : 'Создание…');
+
+    $.ajax({ url: url, method: method, data: fd, processData: false, contentType: false })
+      .done(function (resp) {
+        var c = resp.data;
+        if (id) {
+          var $row = $('#channelsTbody tr[data-id="' + id + '"]');
+          $row.replaceWith(buildRow(c));
+          toast('Канал «' + c.name + '» обновлён');
+        } else {
+          $('#channelsTbody').prepend(buildRow(c));
+          $('#channelCount').text(countText(rowCount()));
+          toast('Канал «' + c.name + '» создан');
+        }
+        resetForm();
+        $block.removeAttr('open');
+      })
+      .fail(function (xhr) {
+        toast(xhrErr(xhr), 'error');
+      })
+      .always(function () {
+        $submit.prop('disabled', false).text(id ? 'Сохранить' : 'Создать');
+      });
+  });
+});
+</script>

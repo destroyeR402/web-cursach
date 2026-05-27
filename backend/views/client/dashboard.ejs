@@ -1,0 +1,118 @@
+<section class="dashboard">
+  <div class="eyebrow" style="margin-bottom:8px">Личный кабинет</div>
+  <h1 style="font-size:48px;font-weight:400;letter-spacing:-0.03em;margin:0 0 32px">
+    Здравствуйте, <span style="color:var(--primary);font-weight:300"><%= user.display_name || user.username %></span>.
+  </h1>
+
+  <% const favChannelIds = favorites.filter(f => f.target_type === 'channel').map(f => f.target_id); %>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:36px">
+    <!-- Today on favorites -->
+    <section>
+      <div style="display:flex;align-items:end;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <h2 style="font-size:22px;font-weight:500;margin:0">Сегодня на ваших каналах</h2>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px">избранные каналы · ближайшие передачи</div>
+        </div>
+        <a href="/" class="btn btn-sm">Всё расписание →</a>
+      </div>
+      <% const favSlots = slots.filter(s => favChannelIds.includes(s.channel_id)); %>
+      <div style="border-top:1px solid var(--border-rule)">
+        <% if (favChannelIds.length === 0) { %>
+          <div style="padding:24px 0;color:var(--muted);font-size:13px">
+            Добавьте каналы в избранное, чтобы видеть передачи здесь.
+          </div>
+        <% } else if (favSlots.length === 0) { %>
+          <div style="padding:24px 0;color:var(--muted);font-size:13px">На избранных каналах сегодня нет публикаций.</div>
+        <% } else { %>
+          <% favSlots.slice(0, 20).forEach(function(s) { %>
+            <% const start = new Date(s.starts_at); %>
+            <% const now = new Date(); %>
+            <% const end = new Date(s.ends_at); %>
+            <% const isLive = start <= now && now < end; %>
+            <div class="slot <%= isLive ? 'slot-live' : '' %>" style="padding:12px 0;border-left:none;border-bottom:1px solid var(--border-soft);background:transparent;align-items:flex-start">
+              <time style="min-width:50px;padding-top:2px"><%= String(start.getHours()).padStart(2,'0') %>:<%= String(start.getMinutes()).padStart(2,'0') %></time>
+              <div style="flex:1">
+                <div style="font-weight:500;font-size:14px"><%= s.program_title %></div>
+                <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <% if (isLive) { %><span class="live-badge-small">● В эфире</span><% } %>
+                  <span style="font-size:12px;color:var(--muted)"><%= s.channel_name %></span>
+                </div>
+              </div>
+              <% if (s.age_code) { %><span class="tag age"><%= s.age_code %></span><% } %>
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+    </section>
+
+    <!-- All channels -->
+    <section>
+      <div style="margin-bottom:14px">
+        <h2 style="font-size:22px;font-weight:500;margin:0">Все каналы</h2>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px"><%= channels.length %> каналов · нажмите ♡ для избранного</div>
+      </div>
+      <div style="border-top:1px solid var(--border-rule)">
+        <% channels.forEach(function(channel) { %>
+          <% const isFav = favChannelIds.includes(channel.id); %>
+          <div style="display:grid;grid-template-columns:48px 1fr auto;gap:14px;padding:16px 0;border-bottom:1px solid var(--border-soft);align-items:center">
+            <div style="font-family:var(--font-mono);font-weight:300;font-size:28px;color:var(--muted);line-height:1;text-align:right"><%= String(channel.id).padStart(2,'0') %></div>
+            <div>
+              <div style="font-size:18px;font-weight:500;line-height:1"><%= channel.name %></div>
+              <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:5px"><%= channel.category || 'Канал' %></div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <a href="/" class="btn btn-sm">Расписание</a>
+              <button type="button" class="btn btn-sm <%= isFav ? 'btn-danger' : '' %>"
+                      style="<%= isFav ? '' : 'border-color:var(--border)' %>"
+                      data-type="channel" data-id="<%= channel.id %>" data-active="<%= isFav ? '1' : '0' %>"
+                      data-role="favorite-toggle">
+                <%= isFav ? '♥ В избранном' : '♡ Избранное' %>
+              </button>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  </div>
+</section>
+
+<style>
+  .live-badge-small { color: var(--danger); font-size: 10px; font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; animation: pulse 1.4s infinite; }
+  [data-role="favorite-toggle"].is-fav { background: var(--danger); border-color: var(--danger); color: #fff; }
+</style>
+
+<script>
+$(function() {
+  // Обработчик дашборда — для кнопок с data-role="favorite-toggle"
+  // (избежим конфликта с глобальным favorites.js используя другой селектор)
+  $(document).on('click', '[data-role="favorite-toggle"]', function(e) {
+    e.preventDefault();
+    const $btn = $(this);
+    if ($btn.prop('disabled')) return;
+    $btn.prop('disabled', true);
+
+    const type = $btn.attr('data-type');
+    const id = parseInt($btn.attr('data-id'), 10);
+    const isActive = $btn.attr('data-active') === '1';
+
+    const req = isActive
+      ? $.ajax({ url: `/client/api/favorites/${type}/${id}`, method: 'DELETE' })
+      : $.ajax({
+          url: '/client/api/favorites', method: 'POST', contentType: 'application/json',
+          data: JSON.stringify({ type, targetId: id }),
+        });
+
+    req.done(function() {
+      const nowActive = !isActive;
+      $btn.attr('data-active', nowActive ? '1' : '0')
+          .toggleClass('is-fav btn-danger', nowActive)
+          .html(nowActive ? '♥ В избранном' : '♡ В избранное');
+    }).fail(function(xhr) {
+      alert('Ошибка: ' + (xhr.responseJSON?.message || xhr.statusText));
+    }).always(function() {
+      $btn.prop('disabled', false);
+    });
+  });
+});
+</script>

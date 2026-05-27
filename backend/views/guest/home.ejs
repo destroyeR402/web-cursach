@@ -1,0 +1,361 @@
+<section class="grid-page">
+
+  <%# === Мастхед === %>
+  <div style="display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px;padding-bottom:24px;border-bottom:1px solid var(--border-rule);margin-bottom:24px">
+    <div>
+      <div class="eyebrow" style="margin-bottom:14px">Главный выпуск · Программа передач</div>
+      <h1 style="font-size:72px;line-height:0.92;font-weight:400;letter-spacing:-0.03em;margin:0 0 18px">
+        Расписание на <span style="color:var(--primary);font-weight:300"><%= currentDate %></span>
+      </h1>
+      <p style="max-width:520px;font-size:14px;line-height:1.6;color:var(--ink-2);margin:0">
+        Полная сетка вещания. Подсветка эфира обновляется автоматически. Раскройте канал, чтобы увидеть расписание до полуночи.
+      </p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.2em;padding:7px 12px;border:1px solid var(--danger);border-radius:2px;color:var(--danger);background:var(--danger-soft)">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--danger);animation:pulse 1.4s infinite"></span>
+        Сейчас в эфире
+      </div>
+      <nav class="date-nav" style="gap:6px">
+        <a class="btn btn-sm" href="/?date=<%= prevDate %>">‹</a>
+        <input type="date" id="datePicker" value="<%= currentDate %>" class="input" style="width:150px;font-family:var(--font-mono);font-size:12px">
+        <a class="btn btn-sm" href="/?date=<%= nextDate %>">›</a>
+        <a class="btn btn-sm" href="/">Сегодня</a>
+      </nav>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btn btn-sm" id="btnExpandAll">⬇ Развернуть все</button>
+        <button type="button" class="btn btn-sm" id="btnCollapseAll">⬆ Свернуть</button>
+      </div>
+    </div>
+  </div>
+
+  <%# === Поисковая панель === %>
+  <div class="search-panel" style="margin-bottom:20px">
+    <form id="searchForm" autocomplete="off" style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto auto;gap:10px;align-items:end">
+      <div>
+        <label class="label">Поиск передачи</label>
+        <input type="search" id="searchQ" class="input" placeholder="Название, ведущий, ключевое слово…">
+      </div>
+      <div>
+        <label class="label">Жанр</label>
+        <select id="searchGenre" class="input select" style="padding-right:32px">
+          <option value="">Все жанры</option>
+          <% genres.forEach(function(g) { %><option value="<%= g.id %>"><%= g.name %></option><% }); %>
+        </select>
+      </div>
+      <div>
+        <label class="label">Дата</label>
+        <input type="date" id="searchDate" class="input" style="font-family:var(--font-mono);font-size:12px">
+      </div>
+      <button type="submit" class="btn btn-primary">Найти</button>
+      <button type="button" class="btn" id="btnSearchReset" style="display:none">Сбросить</button>
+    </form>
+  </div>
+
+  <%# === Результаты поиска (скрыты по умолчанию) === %>
+  <div id="searchResults" style="display:none">
+    <div id="searchResultsInner"></div>
+  </div>
+
+  <%# === Расписание === %>
+  <div id="scheduleSection">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-bottom:16px">
+      <% if (user) { %>
+        <label class="row" style="font-size:13px;gap:8px;cursor:pointer;color:var(--ink-2)">
+          <input type="checkbox" id="favOnly"> Только избранные каналы
+        </label>
+      <% } else { %>
+        <span></span>
+      <% } %>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em" id="scheduleStats">
+        <%= channels.length %> каналов · <%= slots.length %> передач
+      </div>
+    </div>
+
+    <% const now = new Date(); %>
+    <% const isToday = (new Date(currentDate)).toDateString() === now.toDateString(); %>
+
+    <div class="schedule-list">
+      <% channels.forEach(function(ch) { %>
+        <% const chSlots = slots.filter(s => s.channel_id === ch.id); %>
+        <% let liveSlot = null; %>
+        <% if (isToday) { for (const s of chSlots) { const st = new Date(s.starts_at), en = new Date(s.ends_at); if (st <= now && now < en) { liveSlot = s; break; } } } %>
+        <% const isFav = favChannelIds.indexOf(ch.id) !== -1; %>
+        <details class="channel-card-wrap" data-channel-id="<%= ch.id %>">
+          <summary class="channel-summary">
+            <div class="channel-summary-left">
+              <div class="ch-num" style="font-family:var(--font-mono);font-weight:300;font-size:32px;color:var(--muted);line-height:1;letter-spacing:-0.02em;min-width:52px;text-align:right">
+                <%= String(ch.id).padStart(2,'0') %>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:22px;font-weight:500;line-height:1.05;color:var(--text);letter-spacing:-0.02em"><%= ch.name %></div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-top:6px">
+                  <%= ch.category || 'Канал' %><% if (ch.slug) { %> · /<%= ch.slug %><% } %>
+                </div>
+              </div>
+            </div>
+            <div class="channel-summary-meta">
+              <% if (liveSlot) { %>
+                <div style="text-align:right;max-width:280px">
+                  <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">
+                    <span style="width:5px;height:5px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:5px;animation:pulse 1.4s infinite;box-shadow:0 0 6px var(--danger)"></span>Сейчас
+                  </div>
+                  <b style="display:block;font-size:13px;margin-top:3px;color:var(--text)"><%= liveSlot.program_title %></b>
+                </div>
+              <% } %>
+              <span class="slot-count"><%= chSlots.length %> <%= (() => { const n=chSlots.length,m10=n%10,m100=n%100; if(m10===1&&m100!==11)return 'передача'; if(m10>=2&&m10<=4&&(m100<10||m100>=20))return 'передачи'; return 'передач'; })() %></span>
+              <% if (user) { %>
+                <button type="button" class="btn-fav-mini <%= isFav ? 'is-fav' : '' %>"
+                        data-type="channel" data-id="<%= ch.id %>" data-active="<%= isFav ? '1' : '0' %>"
+                        title="<%= isFav ? 'Убрать из избранного' : 'В избранное' %>"><%= isFav ? '♥' : '♡' %></button>
+              <% } %>
+              <span class="expand-hint">▾</span>
+            </div>
+          </summary>
+          <div class="slots-cell">
+            <% if (chSlots.length === 0) { %>
+              <p class="muted" style="padding:12px 0">— нет данных на эту дату —</p>
+            <% } else { %>
+              <% chSlots.forEach(function(s) { %>
+                <% const start = new Date(s.starts_at); %>
+                <% const end = new Date(s.ends_at); %>
+                <% const isLive = isToday && start <= now && now < end; %>
+                <% const isPast = isToday && end <= now; %>
+                <div class="slot <%= isLive ? 'slot-live' : '' %> <%= isPast ? 'slot-past' : '' %>">
+                  <time><%= String(start.getHours()).padStart(2,'0') %>:<%= String(start.getMinutes()).padStart(2,'0') %></time>
+                  <div style="flex:1">
+                    <% if (isLive) { %><span class="live-badge-small">● В эфире</span> <% } %>
+                    <strong><%= s.program_title %></strong>
+                    <div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">
+                      <% if (s.genre_name) { %><span class="tag"><%= s.genre_name %></span><% } %>
+                      <% if (s.announcement) { %><span class="muted" style="font-size:12px"><%= s.announcement %></span><% } %>
+                    </div>
+                  </div>
+                  <% if (s.age_code) { %><span class="tag age"><%= s.age_code %></span><% } %>
+                </div>
+              <% }); %>
+            <% } %>
+          </div>
+        </details>
+      <% }); %>
+      <div style="border-top:1px solid var(--border-rule)"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* === Поиск === */
+  .search-results-header { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; }
+  .search-results-header h2 { margin: 0; font-size: 18px; font-weight: 500; }
+  .search-count { color: var(--muted); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .search-slots-table { width: 100%; border-collapse: collapse; }
+  .search-slots-table th { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border-rule); background: var(--surface-2); text-align: left; }
+  .search-slots-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-soft); font-size: 13px; vertical-align: middle; }
+  .search-slots-table tr:hover td { background: var(--surface-2); }
+  .time-cell { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; color: var(--primary); min-width: 130px; }
+  .thumb-mini { width: 22px; height: 22px; object-fit: cover; border-radius: 2px; vertical-align: middle; margin-right: 5px; border: 1px solid var(--border); }
+  .search-programs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .search-program-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 7px; }
+  .search-program-card h4 { margin: 0; font-size: 15px; font-weight: 500; }
+  .search-program-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .search-program-desc { font-size: 12px; color: var(--muted); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .search-program-next { font-size: 11px; color: var(--primary); margin: 0; font-family: var(--font-mono); }
+  .search-program-channels { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .channel-chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; background: var(--surface-2); border-radius: 2px; font-size: 11px; color: var(--ink-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+  .channel-chip img { width: 14px; height: 14px; object-fit: cover; border-radius: 1px; }
+  .search-empty { text-align: center; padding: 36px 16px; color: var(--muted); font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .14em; }
+  .search-loading { text-align: center; padding: 24px; color: var(--muted); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .14em; }
+
+  /* === Каналы / Расписание === */
+  .schedule-list { display: flex; flex-direction: column; }
+  .channel-card-wrap { border-top: 1px solid var(--border); }
+  .channel-card-wrap:first-child { border-top: 1px solid var(--border-rule); }
+  .channel-card-wrap[open] { border-top-color: var(--border-rule); }
+
+  .channel-summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; padding: 20px 0; user-select: none; transition: background .15s; }
+  .channel-summary::-webkit-details-marker { display: none; }
+  .channel-summary:hover { background: linear-gradient(90deg, var(--accent-soft), transparent 50%); padding-left: 8px; }
+  .channel-summary-left { display: flex; align-items: center; gap: 18px; }
+  .channel-summary-meta { display: flex; gap: 12px; align-items: center; }
+  .slot-count { color: var(--muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; white-space: nowrap; }
+  .expand-hint { color: var(--muted); transition: transform 0.2s; font-size: 14px; }
+  .channel-card-wrap[open] .expand-hint { transform: rotate(180deg); }
+
+  .btn-fav-mini { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 32px; height: 32px; border-radius: 2px; font-size: 14px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-family: var(--font-mono); }
+  .btn-fav-mini:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+  .btn-fav-mini.is-fav { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 10px rgba(255,51,85,0.3); }
+  .btn-fav-mini:disabled { opacity: 0.4; cursor: wait; }
+
+  .slots-cell { padding: 0 0 16px 70px; display: flex; flex-direction: column; gap: 4px; }
+  .slot { padding: 10px 14px; background: transparent; border-bottom: 1px solid var(--border-soft); border-left: 2px solid var(--primary); display: flex; align-items: flex-start; gap: 14px; flex-wrap: nowrap; transition: background .1s; }
+  .slot:hover { background: var(--surface-2); }
+  .slot time { color: var(--muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; min-width: 48px; flex-shrink: 0; padding-top: 2px; }
+  .slot-live { border-left-color: var(--danger) !important; background: linear-gradient(90deg, rgba(255,51,85,0.07), transparent 60%) !important; }
+  .slot-live time { color: var(--danger); }
+  .slot-past { opacity: 0.32; }
+  .live-badge-small { color: var(--danger); font-size: 11px; font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; animation: pulse 1.4s infinite; }
+
+  @media (max-width: 700px) {
+    .channel-summary { grid-template-columns: 1fr; gap: 10px; }
+    .slots-cell { padding-left: 16px; }
+  }
+</style>
+
+<script>
+$(function() {
+
+  // ============================================================
+  // ПОИСК
+  // ============================================================
+  function fmt2(n) { return String(n).padStart(2, '0'); }
+
+  function renderSlotsTable(items) {
+    if (!items.length) return '<div class="search-empty">Ничего не найдено</div>';
+    var rows = items.map(function(s) {
+      var st = new Date(s.starts_at), en = new Date(s.ends_at);
+      var time = fmt2(st.getHours()) + ':' + fmt2(st.getMinutes()) + ' – ' + fmt2(en.getHours()) + ':' + fmt2(en.getMinutes());
+      var logo = s.channel_logo ? '<img src="' + s.channel_logo + '" class="thumb-mini">' : '';
+      var genre = s.genre_name ? '<span class="tag">' + s.genre_name + '</span>' : '';
+      var age   = s.age_code   ? '<span class="tag age">' + s.age_code + '</span>' : '';
+      return '<tr>' +
+        '<td class="time-cell">' + time + '</td>' +
+        '<td>' + logo + s.channel_name + '</td>' +
+        '<td><strong>' + s.title + '</strong></td>' +
+        '<td>' + genre + '</td>' +
+        '<td>' + age + '</td>' +
+        '<td>' + (s.duration_min || '—') + ' мин</td>' +
+        '</tr>';
+    }).join('');
+    return '<table class="search-slots-table">' +
+      '<thead><tr><th>Время</th><th>Канал</th><th>Передача</th><th>Жанр</th><th>Возраст</th><th>Длит.</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderProgramsGrid(items) {
+    if (!items.length) return '<div class="search-empty">Ничего не найдено</div>';
+    var cards = items.map(function(p) {
+      var meta = '';
+      if (p.genre_name) meta += '<span class="tag">' + p.genre_name + '</span>';
+      if (p.age_code)   meta += '<span class="tag age">' + p.age_code + '</span>';
+      if (p.duration_min) meta += '<span class="muted">' + p.duration_min + ' мин</span>';
+
+      var desc = p.description ? '<p class="search-program-desc">' + p.description + '</p>' : '';
+
+      var next = '';
+      if (p.next_show_at) {
+        var d = new Date(p.next_show_at);
+        next = '<p class="search-program-next">📅 ' + fmt2(d.getDate()) + '.' + fmt2(d.getMonth()+1) +
+               ' ' + fmt2(d.getHours()) + ':' + fmt2(d.getMinutes()) + '</p>';
+      } else if (p.recent_slot_count > 0) {
+        next = '<p class="muted" style="font-size:.8rem">Транслировалась ' + p.recent_slot_count + ' раз за 2 нед.</p>';
+      }
+
+      var chips = '';
+      if (p.channels && p.channels.length) {
+        chips = '<div class="search-program-channels">' + p.channels.map(function(c) {
+          var img = c.logo_path ? '<img src="' + c.logo_path + '" alt="">' : '';
+          return '<span class="channel-chip">' + img + c.name + '</span>';
+        }).join('') + '</div>';
+      }
+
+      return '<div class="search-program-card">' +
+        '<h4>' + p.title + '</h4>' +
+        '<div class="search-program-meta">' + meta + '</div>' +
+        desc + next + chips +
+        '</div>';
+    }).join('');
+    return '<div class="search-programs-grid">' + cards + '</div>';
+  }
+
+  function doSearch() {
+    var q       = $('#searchQ').val().trim();
+    var genreId = $('#searchGenre').val();
+    var date    = $('#searchDate').val();
+    if (!q && !genreId && !date) return;
+
+    $('#searchResultsInner').html('<div class="search-loading">Загрузка...</div>');
+    $('#searchResults').show();
+    $('#scheduleSection').hide();
+    $('#btnSearchReset').show();
+
+    $.get('/api/search', { q: q, genreId: genreId, date: date })
+      .done(function(resp) {
+        var result = resp.data;
+        var header = '<div class="search-results-header">' +
+          '<h2>' + (result.mode === 'slots' ? 'В эфире ' + date : 'В справочнике') + '</h2>' +
+          '<span class="search-count">найдено: ' + result.count + '</span>' +
+          '</div>';
+        var body = result.mode === 'slots'
+          ? renderSlotsTable(result.items)
+          : renderProgramsGrid(result.items);
+        $('#searchResultsInner').html(header + body);
+      })
+      .fail(function() {
+        $('#searchResultsInner').html('<div class="search-empty">Ошибка запроса. Попробуйте ещё раз.</div>');
+      });
+  }
+
+  function resetSearch() {
+    $('#searchQ').val('');
+    $('#searchGenre').val('');
+    $('#searchDate').val('');
+    $('#searchResults').hide();
+    $('#searchResultsInner').empty();
+    $('#scheduleSection').show();
+    $('#btnSearchReset').hide();
+  }
+
+  $('#searchForm').on('submit', function(e) { e.preventDefault(); doSearch(); });
+  $('#btnSearchReset').on('click', resetSearch);
+
+  // ============================================================
+  // РАСПИСАНИЕ
+  // ============================================================
+  $('#datePicker').on('change', function() {
+    if (!this.value) return;
+    window.location = '/?date=' + this.value;
+  });
+
+  $('#btnExpandAll').on('click', function() {
+    $('.channel-card-wrap').each(function() { this.open = true; });
+  });
+  $('#btnCollapseAll').on('click', function() {
+    $('.channel-card-wrap').each(function() { this.open = false; });
+  });
+
+  <% if (user) { %>
+  var STORAGE_KEY = 'tv_favOnly';
+  var favIds = <%- JSON.stringify(favChannelIds) %>;
+
+  function applyFilter() {
+    var on = $('#favOnly').is(':checked');
+    localStorage.setItem(STORAGE_KEY, on ? '1' : '0');
+    $('.channel-card-wrap').each(function() {
+      var id = parseInt($(this).data('channel-id'), 10);
+      $(this).toggle(!on || favIds.indexOf(id) !== -1);
+    });
+  }
+
+  if (localStorage.getItem(STORAGE_KEY) === '1') {
+    $('#favOnly').prop('checked', true);
+    applyFilter();
+  }
+  $('#favOnly').on('change', applyFilter);
+
+  $(document).on('click', '.btn-fav-mini[data-type="channel"]', function() {
+    var id = parseInt($(this).attr('data-id'), 10);
+    setTimeout(function() {
+      var nowActive = $('.btn-fav-mini[data-id="' + id + '"]').attr('data-active') === '1';
+      if (nowActive && favIds.indexOf(id) === -1) favIds.push(id);
+      if (!nowActive) favIds = favIds.filter(function(x) { return x !== id; });
+      applyFilter();
+    }, 300);
+  });
+  <% } %>
+
+  var $liveOpen = $('.channel-card-wrap[open]:has(.live-badge)').first();
+  if ($liveOpen.length) {
+    $('html, body').animate({ scrollTop: $liveOpen.offset().top - 100 }, 400);
+  }
+});
+</script>

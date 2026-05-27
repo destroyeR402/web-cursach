@@ -1,0 +1,179 @@
+<section class="subscriptions-page">
+  <div class="eyebrow" style="margin-bottom:8px">Оповещения</div>
+  <h1 style="font-size:48px;font-weight:400;letter-spacing:-0.03em;margin:0 0 8px">
+    Подписки и <span style="color:var(--primary);font-weight:300">уведомления</span>
+  </h1>
+  <p class="muted" style="margin:0 0 32px;font-size:13px">Получайте email-уведомления о публикации новой сетки на выбранных каналах.</p>
+
+  <details class="sub-form-block" open>
+    <summary><strong>+ Подписаться на канал</strong></summary>
+    <form id="subForm" class="sub-form">
+      <label>
+        <span>Канал</span>
+        <select name="targetId" required>
+          <% channels.forEach(function(c) { %>
+            <option value="<%= c.id %>" data-logo="<%= c.logo_path || '' %>" data-category="<%= c.category || '' %>"><%= c.name %></option>
+          <% }); %>
+        </select>
+      </label>
+      <div class="checkbox-group">
+        <label class="cb-label"><input type="checkbox" name="notifyEmail" checked> 📧 Email</label>
+        <label class="cb-label"><input type="checkbox" name="notifyPush"> 🔔 Push</label>
+      </div>
+      <button class="btn btn-primary" type="submit" id="btnSubscribe">Подписаться</button>
+    </form>
+  </details>
+
+  <h2 style="margin-top:24px">Активные подписки <span class="muted" id="subCount">(<%= subs.length %>)</span></h2>
+
+  <div id="emptyHint" class="empty-hint" style="<%= subs.length === 0 ? '' : 'display:none' %>">
+    <p class="muted">Подписок пока нет. Выберите канал выше и нажмите «Подписаться».</p>
+  </div>
+
+  <div class="subs-list" id="subsList" style="<%= subs.length === 0 ? 'display:none' : '' %>">
+    <% subs.forEach(function(s) { %>
+      <div class="sub-card" data-type="<%= s.target_type %>" data-id="<%= s.target_id %>">
+        <% if (s.channel) { %>
+          <% if (s.channel.logo_path) { %>
+            <img src="<%= s.channel.logo_path %>" class="sub-logo">
+          <% } else { %>
+            <div class="sub-logo-ph"><%= s.channel.name.charAt(0) %></div>
+          <% } %>
+          <div class="sub-info">
+            <h3><%= s.channel.name %></h3>
+            <% if (s.channel.category) { %><span class="tag"><%= s.channel.category %></span><% } %>
+          </div>
+        <% } else if (s.program) { %>
+          <div class="sub-logo-ph">📺</div>
+          <div class="sub-info">
+            <h3><%= s.program.title %></h3>
+            <span class="tag">Передача</span>
+          </div>
+        <% } else { %>
+          <div class="sub-logo-ph">?</div>
+          <div class="sub-info">
+            <h3>Подписка #<%= s.id %></h3>
+            <span class="muted"><%= s.target_type %> id=<%= s.target_id %></span>
+          </div>
+        <% } %>
+        <div class="sub-meta">
+          <div class="sub-badges">
+            <% if (s.notify_email) { %><span class="badge">📧 Email</span><% } %>
+            <% if (s.notify_push) { %><span class="badge">🔔 Push</span><% } %>
+            <% if (!s.notify_email && !s.notify_push) { %><span class="muted small">без уведомлений</span><% } %>
+          </div>
+          <small class="muted">с <%= new Date(s.created_at).toLocaleDateString('ru-RU') %></small>
+        </div>
+        <button class="btn btn-sm btn-danger js-sub-remove" data-type="<%= s.target_type %>" data-id="<%= s.target_id %>">Отписаться</button>
+      </div>
+    <% }); %>
+  </div>
+</section>
+
+<style>
+  .sub-form-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 32px; }
+  .sub-form-block summary { padding: 14px 18px; cursor: pointer; font-size: 13px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); list-style: none; }
+  .sub-form-block summary::-webkit-details-marker { display: none; }
+  .sub-form-block[open] summary { color: var(--primary); border-bottom: 1px solid var(--border); }
+  .sub-form { padding: 20px; display: grid; gap: 14px; }
+  .checkbox-group { display: flex; gap: 14px; }
+  .cb-label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; color: var(--ink-2); font-size: 13px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); }
+  .cb-label input { width: auto; margin: 0; }
+  .empty-hint { padding: 28px; text-align: center; color: var(--muted); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .14em; }
+  .subs-list { display: grid; gap: 0; border-top: 1px solid var(--border-rule); }
+  .sub-card { padding: 20px 0; display: grid; grid-template-columns: 56px 1fr auto auto; gap: 16px; align-items: center; border-bottom: 1px solid var(--border-soft); }
+  .sub-logo { width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); }
+  .sub-logo-ph { width: 48px; height: 48px; border-radius: var(--radius); background: var(--surface-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600; color: var(--primary); }
+  .sub-info h3 { margin: 0 0 5px; font-size: 17px; font-weight: 500; line-height: 1; }
+  .sub-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 1px solid var(--border); color: var(--ink-2); padding: 3px 7px; border-radius: var(--radius); font-size: 9px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+  .small { font-size: 11px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+</style>
+
+<script>
+$(function () {
+  function getCount() {
+    return parseInt($('#subCount').text().replace(/\D/g, ''), 10) || 0;
+  }
+  function setCount(n) {
+    $('#subCount').text('(' + n + ')');
+  }
+
+  function buildCard(channelId, channelName, logoPath, category, notifyEmail, notifyPush) {
+    var logoHtml = logoPath
+      ? '<img src="' + logoPath + '" class="sub-logo">'
+      : '<div class="sub-logo-ph">' + channelName.charAt(0) + '</div>';
+    var catHtml = category ? '<span class="tag">' + category + '</span>' : '';
+    var today = new Date().toLocaleDateString('ru-RU');
+    var badges = '';
+    if (notifyEmail) badges += '<span class="badge">📧 Email</span>';
+    if (notifyPush)  badges += '<span class="badge">🔔 Push</span>';
+    if (!badges)     badges = '<span class="muted small">без уведомлений</span>';
+
+    return '<div class="sub-card" data-type="channel" data-id="' + channelId + '">' +
+      logoHtml +
+      '<div class="sub-info"><h3>' + channelName + '</h3>' + catHtml + '</div>' +
+      '<div class="sub-meta"><div class="sub-badges">' + badges + '</div>' +
+      '<small class="muted">с ' + today + '</small></div>' +
+      '<button class="btn btn-sm btn-danger js-sub-remove" data-type="channel" data-id="' + channelId + '">Отписаться</button>' +
+      '</div>';
+  }
+
+  $('#subForm').on('submit', function (e) {
+    e.preventDefault();
+    var $btn = $('#btnSubscribe').prop('disabled', true).text('Сохранение…');
+    var fd = new FormData(this);
+    var targetId = parseInt(fd.get('targetId'), 10);
+    var notifyEmail = fd.get('notifyEmail') === 'on';
+    var notifyPush  = fd.get('notifyPush')  === 'on';
+
+    var $opt = $('[name=targetId] option:selected');
+    var channelName = $opt.text();
+    var logoPath    = $opt.data('logo') || '';
+    var category    = $opt.data('category') || '';
+
+    $.ajax({
+      url: '/client/api/subscriptions',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ type: 'channel', targetId: targetId, notifyEmail: notifyEmail, notifyPush: notifyPush }),
+    }).done(function (resp) {
+      if (resp.data && resp.data.duplicate) {
+        toast('Вы уже подписаны на этот канал', 'warning');
+      } else {
+        var card = buildCard(targetId, channelName, logoPath, category, notifyEmail, notifyPush);
+        $('#subsList').append(card).show();
+        $('#emptyHint').hide();
+        setCount(getCount() + 1);
+        toast('Подписка оформлена');
+      }
+    }).fail(function (xhr) {
+      toast(xhrErr(xhr), 'error');
+    }).always(function () {
+      $btn.prop('disabled', false).text('Подписаться');
+    });
+  });
+
+  $(document).on('click', '.js-sub-remove', function () {
+    if (!confirm('Отписаться?')) return;
+    var $btn = $(this).prop('disabled', true);
+    var $card = $btn.closest('.sub-card');
+    var type = $btn.data('type');
+    var id   = $btn.data('id');
+
+    $.ajax({
+      url: '/client/api/subscriptions/' + type + '/' + id,
+      method: 'DELETE',
+    }).done(function () {
+      $card.remove();
+      var n = getCount() - 1;
+      setCount(n);
+      if (n === 0) { $('#subsList').hide(); $('#emptyHint').show(); }
+      toast('Подписка отменена');
+    }).fail(function (xhr) {
+      $btn.prop('disabled', false);
+      toast(xhrErr(xhr), 'error');
+    });
+  });
+});
+</script>
