@@ -121,6 +121,7 @@
                 <% const end = new Date(s.ends_at); %>
                 <% const isLive = isToday && start <= now && now < end; %>
                 <% const isPast = isToday && end <= now; %>
+                <% const isProgFav = user && favProgramIds.indexOf(s.program_id) !== -1; %>
                 <div class="slot <%= isLive ? 'slot-live' : '' %> <%= isPast ? 'slot-past' : '' %>">
                   <time><%= String(start.getHours()).padStart(2,'0') %>:<%= String(start.getMinutes()).padStart(2,'0') %></time>
                   <div style="flex:1">
@@ -132,6 +133,11 @@
                     </div>
                   </div>
                   <% if (s.age_code) { %><span class="tag age"><%= s.age_code %></span><% } %>
+                  <% if (user) { %>
+                    <button type="button" class="btn-fav-mini btn-fav-slot <%= isProgFav ? 'is-fav' : '' %>"
+                            data-type="program" data-id="<%= s.program_id %>" data-active="<%= isProgFav ? '1' : '0' %>"
+                            title="<%= isProgFav ? 'Убрать передачу из избранного' : 'Передачу в избранное' %>"><%= isProgFav ? '♥' : '♡' %></button>
+                  <% } %>
                 </div>
               <% }); %>
             <% } %>
@@ -185,6 +191,8 @@
   .btn-fav-mini:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
   .btn-fav-mini.is-fav { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 0 0 10px rgba(255,51,85,0.3); }
   .btn-fav-mini:disabled { opacity: 0.4; cursor: wait; }
+  .btn-fav-slot { width: 26px; height: 26px; font-size: 12px; flex-shrink: 0; }
+  .search-slots-table .fav-cell { text-align: center; padding: 4px; }
 
   .slots-cell { padding: 0 0 16px 70px; display: flex; flex-direction: column; gap: 4px; }
   .slot.slot-hidden { display: none; }
@@ -220,6 +228,15 @@ $(function() {
   // ============================================================
   function fmt2(n) { return String(n).padStart(2, '0'); }
 
+  var IS_LOGGED_IN = <%- user ? 'true' : 'false' %>;
+
+  function favBtn(programId, isFav) {
+    if (!IS_LOGGED_IN || !programId) return '';
+    return '<button type="button" class="btn-fav-mini btn-fav-slot ' + (isFav ? 'is-fav' : '') + '" ' +
+      'data-type="program" data-id="' + programId + '" data-active="' + (isFav ? '1' : '0') + '" ' +
+      'title="' + (isFav ? 'Убрать из избранного' : 'В избранное') + '">' + (isFav ? '♥' : '♡') + '</button>';
+  }
+
   function renderSlotsTable(items) {
     if (!items.length) return '<div class="search-empty">Ничего не найдено</div>';
     var rows = items.map(function(s) {
@@ -228,6 +245,7 @@ $(function() {
       var logo = s.channel_logo ? '<img src="' + s.channel_logo + '" class="thumb-mini">' : '';
       var genre = s.genre_name ? '<span class="tag">' + s.genre_name + '</span>' : '';
       var age   = s.age_code   ? '<span class="tag age">' + s.age_code + '</span>' : '';
+      var fav   = favBtn(s.program_id, !!s.is_favorite);
       return '<tr>' +
         '<td class="time-cell">' + time + '</td>' +
         '<td>' + logo + s.channel_name + '</td>' +
@@ -235,10 +253,12 @@ $(function() {
         '<td>' + genre + '</td>' +
         '<td>' + age + '</td>' +
         '<td>' + (s.duration_min || '—') + ' мин</td>' +
+        (IS_LOGGED_IN ? '<td class="fav-cell">' + fav + '</td>' : '') +
         '</tr>';
     }).join('');
+    var favTh = IS_LOGGED_IN ? '<th style="width:48px"></th>' : '';
     return '<table class="search-slots-table">' +
-      '<thead><tr><th>Время</th><th>Канал</th><th>Передача</th><th>Жанр</th><th>Возраст</th><th>Длит.</th></tr></thead>' +
+      '<thead><tr><th>Время</th><th>Канал</th><th>Передача</th><th>Жанр</th><th>Возраст</th><th>Длит.</th>' + favTh + '</tr></thead>' +
       '<tbody>' + rows + '</tbody></table>';
   }
 
@@ -269,8 +289,13 @@ $(function() {
         }).join('') + '</div>';
       }
 
+      var headerRow = '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<h4 style="margin:0">' + p.title + '</h4>' +
+        favBtn(p.id, !!p.is_favorite) +
+      '</div>';
+
       return '<div class="search-program-card">' +
-        '<h4>' + p.title + '</h4>' +
+        headerRow +
         '<div class="search-program-meta">' + meta + '</div>' +
         desc + next + chips +
         '</div>';

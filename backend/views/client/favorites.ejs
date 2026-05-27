@@ -15,50 +15,12 @@
     </div>
   <% } %>
 
-  <%# === Карусель любимых передач === %>
-  <% if (carouselPrograms.length > 0) { %>
-    <section class="fav-carousel-section">
-      <div class="section-head">
-        <div class="section-head-mark">
-          <span class="section-num">I</span>
-        </div>
-        <div>
-          <h2>Карусель любимых передач</h2>
-          <div class="section-sub"><%= carouselPrograms.length %> ближайших</div>
-        </div>
-        <div class="carousel-controls">
-          <button class="btn btn-sm" id="carouselPrev" type="button">‹</button>
-          <button class="btn btn-sm" id="carouselNext" type="button">›</button>
-        </div>
-      </div>
-      <div class="fav-carousel" id="favCarousel">
-        <% carouselPrograms.forEach(function(p) { %>
-          <article class="fav-carousel-card" data-program-id="<%= p.id %>">
-            <div class="fav-carousel-poster">
-              <% if (p.poster_path) { %>
-                <img src="<%= p.poster_path %>" alt="<%= p.title %>">
-              <% } else { %>
-                <div class="fav-carousel-poster-ph"><%= p.title.charAt(0).toUpperCase() %></div>
-              <% } %>
-              <% if (p.age_code) { %><span class="tag age fav-carousel-age"><%= p.age_code %></span><% } %>
-            </div>
-            <div class="fav-carousel-body">
-              <h4 title="<%= p.title %>"><%= p.title %></h4>
-              <div class="mono" style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:6px">
-                <%= p.genre_name || '—' %><% if (p.duration_min) { %> · <%= p.duration_min %> мин<% } %>
-              </div>
-            </div>
-          </article>
-        <% }); %>
-      </div>
-    </section>
-  <% } %>
 
   <%# === Любимые каналы === %>
   <% if (totalChannels > 0) { %>
     <section class="fav-section" id="channelsSection">
       <div class="section-head">
-        <div class="section-head-mark"><span class="section-num">II</span></div>
+        <div class="section-head-mark"><span class="section-num">I</span></div>
         <div>
           <h2>Любимые каналы</h2>
           <div class="section-sub" id="channelsSub"><%= totalChannels %> каналов</div>
@@ -89,7 +51,7 @@
   <% if (totalPrograms > 0) { %>
     <section class="fav-section" id="programsSection">
       <div class="section-head">
-        <div class="section-head-mark"><span class="section-num">III</span></div>
+        <div class="section-head-mark"><span class="section-num">II</span></div>
         <div>
           <h2>Любимые передачи</h2>
           <div class="section-sub" id="programsSub"><%= totalPrograms %> передач · уведомления приходят по подписке</div>

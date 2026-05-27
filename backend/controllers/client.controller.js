@@ -59,7 +59,8 @@ async function renderDashboard(req, res, next) {
     const channels = await channelModel.list();
     const today = new Date();
     const slots = await slotModel.listInRange(startOfDay(today), endOfDay(today), { onlyPublished: true });
-    res.render('client/dashboard', { title: 'Личный кабинет', favorites, channels, slots });
+    const favProgramIds = favorites.filter((f) => f.target_type === 'program').map((f) => f.target_id);
+    res.render('client/dashboard', { title: 'Личный кабинет', favorites, channels, slots, favProgramIds });
   } catch (err) { next(err); }
 }
 

@@ -19,13 +19,15 @@ async function renderHome(req, res, next) {
       genreModel.list(),
     ]);
     let favChannelIds = [];
+    let favProgramIds = [];
     if (req.user) {
-      const favs = await favoriteModel.list(req.user.id, 'channel');
-      favChannelIds = favs.map((f) => f.target_id);
+      const favs = await favoriteModel.list(req.user.id);
+      favChannelIds = favs.filter((f) => f.target_type === 'channel').map((f) => f.target_id);
+      favProgramIds = favs.filter((f) => f.target_type === 'program').map((f) => f.target_id);
     }
     res.render('guest/home', {
       title: 'Расписание',
-      channels, slots, genres, favChannelIds,
+      channels, slots, genres, favChannelIds, favProgramIds,
       currentDate: toISODate(from),
       prevDate: toISODate(addDays(from, -1)),
       nextDate: toISODate(addDays(from, 1)),
@@ -44,10 +46,15 @@ async function renderSearch(req, res, next) {
     const results = hasFilter
       ? await searchService.searchPrograms({ q, genreId, date })
       : { mode: 'idle', items: [], count: 0 };
+    let favProgramIds = [];
+    if (req.user) {
+      const favs = await favoriteModel.list(req.user.id, 'program');
+      favProgramIds = favs.map((f) => f.target_id);
+    }
     res.render('guest/search', {
       title: 'Поиск',
       q, genreId, date: dateStr,
-      genres, results, hasFilter,
+      genres, results, hasFilter, favProgramIds,
     });
   } catch (err) { next(err); }
 }
@@ -59,6 +66,14 @@ async function apiSearch(req, res, next) {
       genreId: req.query.genreId || null,
       date: req.query.date || null,
     });
+    if (req.user) {
+      const favs = await favoriteModel.list(req.user.id, 'program');
+      const favSet = new Set(favs.map((f) => f.target_id));
+      results.items.forEach((it) => {
+        const pid = it.program_id != null ? it.program_id : it.id;
+        it.is_favorite = favSet.has(pid);
+      });
+    }
     ok(res, results);
   } catch (err) { next(err); }
 }
