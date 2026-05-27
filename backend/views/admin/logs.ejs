@@ -1,4 +1,4 @@
-<section>
+<section class="admin-logs">
   <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px">
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Администрирование · Аудит</div>
@@ -9,61 +9,105 @@
     <button class="btn" id="btnExport">⤓ CSV</button>
   </div>
 
+  <div class="card" style="padding:14px 16px;margin-bottom:14px">
+    <div class="logs-filters">
+      <div class="logs-filter">
+        <span class="label">Поиск</span>
+        <input id="fSearch" class="input" type="search" placeholder="Действие, пользователь, IP…" value="<%= params.search || '' %>">
+      </div>
+      <div class="logs-filter">
+        <span class="label">Действие</span>
+        <select id="fAction" class="select">
+          <option value="">— все —</option>
+          <% actions.forEach(function(a) { %>
+            <option value="<%= a %>" <%= params.action === a ? 'selected' : '' %>><%= a %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="logs-filter">
+        <span class="label">Сущность</span>
+        <select id="fEntity" class="select">
+          <option value="">— все —</option>
+          <% entities.forEach(function(e) { %>
+            <option value="<%= e %>" <%= params.entity === e ? 'selected' : '' %>><%= e %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="logs-filter">
+        <span class="label">С даты</span>
+        <input id="fDateFrom" class="input" type="datetime-local" value="<%= params.dateFrom || '' %>">
+      </div>
+      <div class="logs-filter">
+        <span class="label">По дату</span>
+        <input id="fDateTo" class="input" type="datetime-local" value="<%= params.dateTo || '' %>">
+      </div>
+      <div class="logs-filter logs-filter-actions">
+        <button class="btn btn-sm" id="fReset" type="button">Сбросить</button>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="overflow:hidden;margin-bottom:4px">
     <table class="data-table" id="logsTable">
       <thead>
         <tr>
-          <th style="width:170px">Дата · Время</th>
-          <th style="width:160px">Пользователь</th>
-          <th>Действие</th>
-          <th style="width:110px">Сущность</th>
+          <th class="js-sort" data-sort="created_at" style="width:170px;cursor:pointer">Дата · Время <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="username" style="width:160px;cursor:pointer">Пользователь <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="action" style="cursor:pointer">Действие <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="entity" style="width:110px;cursor:pointer">Сущность <span class="sort-ind"></span></th>
           <th style="width:130px">ID</th>
-          <th>IP</th>
+          <th class="js-sort" data-sort="ip" style="cursor:pointer">IP <span class="sort-ind"></span></th>
         </tr>
       </thead>
-      <tbody>
-      <% logs.forEach(function(l) { %>
-        <% var dt = new Date(l.created_at); %>
-        <% var dateStr = dt.toLocaleDateString('ru-RU'); %>
-        <% var timeStr = dt.toLocaleTimeString('ru-RU'); %>
-        <% var isErr = l.action && (l.action.includes('fail') || l.action.includes('err') || l.action.includes('delete')); %>
-        <% var isWarn = l.action && (l.action.includes('role') || l.action.includes('deactivate') || l.action.includes('warn')); %>
-        <tr>
-          <td style="font-family:var(--font-mono);font-size:11px">
-            <span style="color:var(--text)"><%= dateStr %></span>
-            <span style="color:var(--muted);margin-left:5px"><%= timeStr %></span>
-          </td>
-          <td>
-            <span style="font-size:13px"><%= l.username || '—' %></span>
-            <% if (l.role) { %><span class="tag" style="margin-left:6px;font-size:9px"><%= l.role %></span><% } %>
-          </td>
-          <td>
-            <span style="font-family:var(--font-mono);font-size:11px;padding:2px 7px;border-radius:2px;
-              background:<%= isErr ? 'var(--danger-soft)' : isWarn ? 'rgba(255,181,71,0.1)' : 'var(--surface-2)' %>;
-              color:<%= isErr ? 'var(--danger)' : isWarn ? 'var(--warning)' : 'var(--muted)' %>">
-              <%= l.action %>
-            </span>
-          </td>
-          <td style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em"><%= l.entity || '—' %></td>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2)"><%= l.entity_id || '—' %></td>
-          <td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2)"><%= l.ip || '—' %></td>
-        </tr>
-      <% }); %>
-      </tbody>
+      <tbody id="logsTbody"></tbody>
     </table>
+    <div id="logsEmpty" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase">
+      Записей не найдено
+    </div>
   </div>
-  <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:10px">
-    Показано записей: <%= logs.length %>
+
+  <div class="logs-footer">
+    <div id="logsStat" class="page-info"></div>
+    <div class="pagination" id="logsPagination"></div>
+    <div class="logs-pagesize">
+      <span class="label" style="margin:0">На странице</span>
+      <select id="fPageSize" class="select" style="width:auto">
+        <option value="20">20</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+      </select>
+    </div>
   </div>
 </section>
+
+<style>
+  .logs-filters {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .logs-filter .label { margin-bottom: 4px; }
+  .logs-filter-actions { display: flex; align-items: end; }
+  .logs-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .logs-pagesize { display: flex; gap: 8px; align-items: center; }
+  .js-sort .sort-ind { color: var(--muted); margin-left: 4px; font-family: var(--font-mono); font-size: 10px; }
+  .js-sort.sort-active .sort-ind { color: var(--primary); }
+  .js-sort:hover { color: var(--primary); }
+  @media (max-width: 1000px) {
+    .logs-filters { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
 <script>
-$('#btnExport').on('click', function() {
-  const rows = [['Дата','Пользователь','Действие','Сущность','ID','IP']];
-  $('#logsTable tbody tr').each(function() {
-    rows.push($(this).find('td').map((_, td) => '"' + $(td).text().trim().replace(/"/g,'""') + '"').get());
-  });
-  const csv = '﻿' + rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'audit.csv'; a.click();
-});
+  window.__LOGS_INITIAL__ = {
+    logs: <%- JSON.stringify(logs) %>,
+    total: <%= total %>,
+    params: <%- JSON.stringify(params) %>
+  };
 </script>
+<script src="/js/roles/logs.js"></script>
