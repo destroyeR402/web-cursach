@@ -11,8 +11,9 @@ router.get('/dashboard',      c.renderDashboard);
 router.get('/favorites',      c.renderFavorites);
 router.get('/subscriptions',  c.renderSubscriptions);
 
-router.get('/api/favorites',     c.listFavorites);
-router.post('/api/favorites',    c.addFavorite);
+router.get('/api/favorites',       c.listFavorites);
+router.get('/api/favorites/items', c.listFavoritesItems);
+router.post('/api/favorites',      c.addFavorite);
 router.delete('/api/favorites/:type/:targetId', c.removeFavorite);
 
 router.get('/api/subscriptions',    c.listSubscriptions);
