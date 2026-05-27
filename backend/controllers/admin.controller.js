@@ -9,14 +9,29 @@ const ageRatingModel = require('../models/AgeRating');
 const auditModel = require('../models/AuditLog');
 const { ok, fail } = require('../utils/response.util');
 
+function parseUsersQuery(q) {
+  let isActive = null;
+  if (q.isActive === 'true') isActive = true;
+  else if (q.isActive === 'false') isActive = false;
+  return {
+    limit: Math.min(parseInt(q.limit || '20', 10), 200),
+    offset: parseInt(q.offset || '0', 10),
+    search: q.q || '',
+    role: q.role || null,
+    isActive,
+    sortBy: q.sortBy || 'created_at',
+    sortDir: q.sortDir || 'desc',
+  };
+}
+
 async function listUsers(req, res, next) {
   try {
-    const limit = parseInt(req.query.limit || '50', 10);
-    const offset = parseInt(req.query.offset || '0', 10);
-    const search = req.query.q || '';
-    const users = await userModel.list({ limit, offset, search });
-    const total = await userModel.count({ search });
-    ok(res, users.map(userModel.publicFields), { total, limit, offset });
+    const params = parseUsersQuery(req.query);
+    const [users, total] = await Promise.all([
+      userModel.list(params),
+      userModel.count(params),
+    ]);
+    ok(res, users.map(userModel.publicFields), { total, limit: params.limit, offset: params.offset });
   } catch (err) { next(err); }
 }
 
@@ -75,10 +90,19 @@ async function listAudit(req, res, next) {
 
 async function renderUsers(req, res, next) {
   try {
-    const users = await userModel.list({ limit: 100 });
-    const roles = await roleModel.list();
-    const channels = await channelModel.list({ activeOnly: false });
-    res.render('admin/users-manage', { title: 'Пользователи', users: users.map(userModel.publicFields), roles, channels });
+    const params = parseUsersQuery(req.query);
+    const [users, total, counts, roles, channels] = await Promise.all([
+      userModel.list(params),
+      userModel.count(params),
+      userModel.roleCounts(),
+      roleModel.list(),
+      channelModel.list({ activeOnly: false }),
+    ]);
+    res.render('admin/users-manage', {
+      title: 'Пользователи', active: 'users',
+      users: users.map(userModel.publicFields),
+      total, params, counts, roles, channels,
+    });
   } catch (err) { next(err); }
 }
 

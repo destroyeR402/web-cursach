@@ -67,20 +67,63 @@ async function changeRole(id, roleCode) {
   return findById(id);
 }
 
-async function list({ limit = 50, offset = 0, search = '' } = {}) {
-  const params = [limit, offset];
-  let where = '';
-  if (search) { params.push(`%${search}%`); where = `WHERE u.email ILIKE $3 OR u.username ILIKE $3 OR u.display_name ILIKE $3`; }
-  const { rows } = await query(`${SELECT} ${where} ORDER BY u.created_at DESC LIMIT $1 OFFSET $2`, params);
+const USER_SORT_COLUMNS = {
+  id: 'u.id',
+  email: 'u.email',
+  username: 'u.username',
+  display_name: 'u.display_name',
+  role: 'r.code',
+  is_active: 'u.is_active',
+  created_at: 'u.created_at',
+};
+
+function buildUserFilters({ search, role, isActive } = {}) {
+  const params = [];
+  const where = [];
+  if (search) {
+    params.push(`%${search}%`);
+    where.push(`(u.email ILIKE $${params.length} OR u.username ILIKE $${params.length} OR u.display_name ILIKE $${params.length})`);
+  }
+  if (role) { params.push(role); where.push(`r.code = $${params.length}`); }
+  if (isActive === true || isActive === false) {
+    params.push(isActive); where.push(`u.is_active = $${params.length}`);
+  }
+  return { where: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
+}
+
+async function list({
+  limit = 50, offset = 0,
+  search = '', role = null, isActive = null,
+  sortBy = 'created_at', sortDir = 'desc',
+} = {}) {
+  const { where, params } = buildUserFilters({ search, role, isActive });
+  const col = USER_SORT_COLUMNS[sortBy] || USER_SORT_COLUMNS.created_at;
+  const dir = String(sortDir).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+  params.push(limit, offset);
+  const { rows } = await query(
+    `${SELECT} ${where} ORDER BY ${col} ${dir}, u.id ASC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
   return rows;
 }
 
-async function count({ search = '' } = {}) {
-  const params = [];
-  let where = '';
-  if (search) { params.push(`%${search}%`); where = `WHERE u.email ILIKE $1 OR u.username ILIKE $1 OR u.display_name ILIKE $1`; }
-  const { rows } = await query(`SELECT COUNT(*)::int AS n FROM users u ${where}`, params);
+async function count({ search = '', role = null, isActive = null } = {}) {
+  const { where, params } = buildUserFilters({ search, role, isActive });
+  const { rows } = await query(
+    `SELECT COUNT(*)::int AS n FROM users u JOIN roles r ON r.id = u.role_id ${where}`,
+    params
+  );
   return rows[0].n;
+}
+
+async function roleCounts() {
+  const { rows } = await query(
+    `SELECT r.code, COUNT(u.id)::int AS n
+     FROM roles r LEFT JOIN users u ON u.role_id = r.id
+     GROUP BY r.code`
+  );
+  return rows.reduce((acc, r) => { acc[r.code] = r.n; return acc; }, {});
 }
 
 function publicFields(u) {
@@ -91,5 +134,6 @@ function publicFields(u) {
 
 module.exports = {
   findById, findByEmail, findByUsername, create, updateProfile,
-  updateLastLogin, setActive, changeRole, list, count, publicFields,
+  updateLastLogin, setActive, changeRole,
+  list, count, roleCounts, publicFields,
 };
