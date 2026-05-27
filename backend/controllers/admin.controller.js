@@ -61,15 +61,29 @@ async function unassignEditor(req, res, next) {
   } catch (err) { next(err); }
 }
 
+function parseAuditQuery(q) {
+  return {
+    limit: Math.min(parseInt(q.limit || '50', 10), 500),
+    offset: parseInt(q.offset || '0', 10),
+    userId: q.userId ? parseInt(q.userId, 10) : null,
+    action: q.action || null,
+    entity: q.entity || null,
+    dateFrom: q.dateFrom || null,
+    dateTo: q.dateTo || null,
+    search: q.q || null,
+    sortBy: q.sortBy || 'created_at',
+    sortDir: q.sortDir || 'desc',
+  };
+}
+
 async function listAudit(req, res, next) {
   try {
-    const rows = await auditModel.list({
-      limit: parseInt(req.query.limit || '100', 10),
-      offset: parseInt(req.query.offset || '0', 10),
-      userId: req.query.userId ? parseInt(req.query.userId, 10) : null,
-      action: req.query.action || null,
-    });
-    ok(res, rows);
+    const params = parseAuditQuery(req.query);
+    const [rows, total] = await Promise.all([
+      auditModel.list(params),
+      auditModel.count(params),
+    ]);
+    ok(res, rows, { total, limit: params.limit, offset: params.offset });
   } catch (err) { next(err); }
 }
 
@@ -84,8 +98,17 @@ async function renderUsers(req, res, next) {
 
 async function renderLogs(req, res, next) {
   try {
-    const logs = await auditModel.list({ limit: 200 });
-    res.render('admin/logs', { title: 'Журнал', logs });
+    const params = parseAuditQuery(req.query);
+    const [logs, total, actions, entities] = await Promise.all([
+      auditModel.list(params),
+      auditModel.count(params),
+      auditModel.distinctActions(),
+      auditModel.distinctEntities(),
+    ]);
+    res.render('admin/logs', {
+      title: 'Журнал', active: 'logs',
+      logs, total, params, actions, entities,
+    });
   } catch (err) { next(err); }
 }
 
