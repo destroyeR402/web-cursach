@@ -9,6 +9,30 @@ const SELECT = `
   FROM users u JOIN roles r ON r.id = u.role_id
 `;
 
+const USER_SORT_COLUMNS = {
+  id: 'u.id',
+  email: 'u.email',
+  username: 'u.username',
+  display_name: 'u.display_name',
+  role: 'r.code',
+  is_active: 'u.is_active',
+  created_at: 'u.created_at',
+};
+
+function buildUserFilters({ search, role, isActive } = {}) {
+  const params = [];
+  const where = [];
+  if (search) {
+    params.push(`%${search}%`);
+    where.push(`(u.email ILIKE $${params.length} OR u.username ILIKE $${params.length} OR u.display_name ILIKE $${params.length})`);
+  }
+  if (role) { params.push(role); where.push(`r.code = $${params.length}`); }
+  if (isActive === true || isActive === false) {
+    params.push(isActive); where.push(`u.is_active = $${params.length}`);
+  }
+  return { where: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
+}
+
 async function findById(id) {
   const { rows } = await query(`${SELECT} WHERE u.id = $1`, [id]);
   return rows[0] || null;
@@ -67,44 +91,6 @@ async function changeRole(id, roleCode) {
   return findById(id);
 }
 
-const USER_SORT_COLUMNS = {
-  id: 'u.id',
-  email: 'u.email',
-  username: 'u.username',
-  display_name: 'u.display_name',
-  role: 'r.code',
-  is_active: 'u.is_active',
-  created_at: 'u.created_at',
-};
-
-function buildUserFilters({ search, role, isActive } = {}) {
-  const params = [];
-  const where = [];
-  if (search) {
-    params.push(`%${search}%`);
-    where.push(`(u.email ILIKE $${params.length} OR u.username ILIKE $${params.length} OR u.display_name ILIKE $${params.length})`);
-  }
-  if (role) { params.push(role); where.push(`r.code = $${params.length}`); }
-  if (isActive === true || isActive === false) {
-    params.push(isActive); where.push(`u.is_active = $${params.length}`);
-  }
-  return { where: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
-}
-
-async function list({
-  limit = 50, offset = 0,
-  search = '', role = null, isActive = null,
-  sortBy = 'created_at', sortDir = 'desc',
-} = {}) {
-  const { where, params } = buildUserFilters({ search, role, isActive });
-  const col = USER_SORT_COLUMNS[sortBy] || USER_SORT_COLUMNS.created_at;
-  const dir = String(sortDir).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
-  params.push(limit, offset);
-  const { rows } = await query(
-    `${SELECT} ${where} ORDER BY ${col} ${dir}, u.id ASC
-     LIMIT $${params.length - 1} OFFSET $${params.length}`,
-    params
-  );
 async function updatePassword(id, passwordHash) {
   await query(
     'UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1',
@@ -127,11 +113,20 @@ async function profileStats(userId) {
   return rows[0] || { fav_channels: 0, fav_programs: 0, subs: 0 };
 }
 
-async function list({ limit = 50, offset = 0, search = '' } = {}) {
-  const params = [limit, offset];
-  let where = '';
-  if (search) { params.push(`%${search}%`); where = `WHERE u.email ILIKE $3 OR u.username ILIKE $3 OR u.display_name ILIKE $3`; }
-  const { rows } = await query(`${SELECT} ${where} ORDER BY u.created_at DESC LIMIT $1 OFFSET $2`, params);
+async function list({
+  limit = 50, offset = 0,
+  search = '', role = null, isActive = null,
+  sortBy = 'created_at', sortDir = 'desc',
+} = {}) {
+  const { where, params } = buildUserFilters({ search, role, isActive });
+  const col = USER_SORT_COLUMNS[sortBy] || USER_SORT_COLUMNS.created_at;
+  const dir = String(sortDir).toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+  params.push(limit, offset);
+  const { rows } = await query(
+    `${SELECT} ${where} ORDER BY ${col} ${dir}, u.id ASC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
   return rows;
 }
 
@@ -162,5 +157,6 @@ function publicFields(u) {
 module.exports = {
   findById, findByEmail, findByUsername, create, updateProfile,
   updateLastLogin, setActive, changeRole,
+  updatePassword, remove, profileStats,
   list, count, roleCounts, publicFields,
 };
