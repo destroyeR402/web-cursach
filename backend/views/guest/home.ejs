@@ -187,6 +187,17 @@
   .btn-fav-mini:disabled { opacity: 0.4; cursor: wait; }
 
   .slots-cell { padding: 0 0 16px 70px; display: flex; flex-direction: column; gap: 4px; }
+  .slot.slot-hidden { display: none; }
+  .timeline-load-more {
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+    margin-top: 8px; padding: 6px 0;
+    border-top: 1px dashed var(--border-soft);
+  }
+  .timeline-load-more .lm-count {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; margin-left: 6px;
+  }
   .slot { padding: 10px 14px; background: transparent; border-bottom: 1px solid var(--border-soft); border-left: 2px solid var(--primary); display: flex; align-items: flex-start; gap: 14px; flex-wrap: nowrap; transition: background .1s; }
   .slot:hover { background: var(--surface-2); }
   .slot time { color: var(--muted); font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; min-width: 48px; flex-shrink: 0; padding-top: 2px; }
@@ -357,5 +368,93 @@ $(function() {
   if ($liveOpen.length) {
     $('html, body').animate({ scrollTop: $liveOpen.offset().top - 100 }, 400);
   }
+
+  // ============================================================
+  // ТАЙМЛАЙН: 3 до + текущая + 1 след; кнопка «Загрузить ещё»
+  // ============================================================
+  var TIMELINE_BEFORE = 3;
+  var TIMELINE_AFTER = 1;
+  var TIMELINE_FALLBACK = 5;
+  var TIMELINE_STEP = 5;
+
+  function applyTimelineWindow(detailsEl) {
+    var $det = $(detailsEl);
+    var $slots = $det.find('.slots-cell > .slot');
+    if (!$slots.length) { $det.find('.timeline-load-more').hide(); return; }
+
+    var expand = parseInt($det.attr('data-tl-expand') || '0', 10);
+    var $live = $slots.filter('.slot-live').first();
+    var $past = $slots.filter('.slot-past');
+    var isTodayMode = $live.length > 0 || $past.length > 0;
+
+    var anchorIdx = -1;
+    if ($live.length) {
+      anchorIdx = $slots.index($live);
+    } else if (isTodayMode) {
+      var $up = $slots.not('.slot-past').first();
+      if ($up.length) anchorIdx = $slots.index($up);
+    }
+
+    var fromIdx, toIdx;
+    if (isTodayMode && anchorIdx >= 0) {
+      fromIdx = Math.max(0, anchorIdx - TIMELINE_BEFORE - expand);
+      toIdx = Math.min($slots.length - 1, anchorIdx + TIMELINE_AFTER + expand);
+    } else if (isTodayMode) {
+      // День сегодня, но всё уже прошло — показываем хвост
+      var tailSize = Math.min($slots.length, TIMELINE_FALLBACK + expand);
+      fromIdx = $slots.length - tailSize;
+      toIdx = $slots.length - 1;
+    } else {
+      fromIdx = 0;
+      toIdx = Math.min($slots.length - 1, TIMELINE_FALLBACK - 1 + expand);
+    }
+
+    $slots.each(function (i) {
+      $(this).toggleClass('slot-hidden', i < fromIdx || i > toIdx);
+    });
+
+    var hidden = $slots.filter('.slot-hidden').length;
+    var $bar = $det.find('.timeline-load-more');
+    if (hidden > 0) {
+      if (!$bar.length) {
+        $bar = $(
+          '<div class="timeline-load-more">' +
+            '<button type="button" class="btn btn-sm js-tl-more">↓ Загрузить ещё <span class="lm-count"></span></button>' +
+            '<button type="button" class="btn btn-sm js-tl-all">Показать все</button>' +
+          '</div>'
+        );
+        $det.find('.slots-cell').append($bar);
+      }
+      $bar.find('.lm-count').text('(' + hidden + ' скрыто)');
+      $bar.find('.js-tl-all').toggle(hidden > TIMELINE_STEP);
+      $bar.show();
+    } else if ($bar.length) {
+      $bar.hide();
+    }
+  }
+
+  $(document).on('click', '.js-tl-more', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    var $det = $(this).closest('.channel-card-wrap');
+    var cur = parseInt($det.attr('data-tl-expand') || '0', 10);
+    $det.attr('data-tl-expand', cur + TIMELINE_STEP);
+    applyTimelineWindow($det[0]);
+  });
+
+  $(document).on('click', '.js-tl-all', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    var $det = $(this).closest('.channel-card-wrap');
+    $det.attr('data-tl-expand', '99999');
+    applyTimelineWindow($det[0]);
+  });
+
+  // Reagiruem на открытие <details>
+  $('.channel-card-wrap').each(function () {
+    var el = this;
+    el.addEventListener('toggle', function () {
+      if (el.open) applyTimelineWindow(el);
+    });
+    if (el.open) applyTimelineWindow(el);
+  });
 });
 </script>
