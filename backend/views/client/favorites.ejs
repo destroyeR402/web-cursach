@@ -1,72 +1,337 @@
 <section class="favorites-page">
   <div class="eyebrow" style="margin-bottom:8px">Закладки</div>
-  <h1 style="font-size:48px;font-weight:400;letter-spacing:-0.03em;margin:0 0 32px">
+  <h1 style="font-size:48px;font-weight:400;letter-spacing:-0.03em;margin:0 0 8px">
     В <span style="color:var(--primary);font-weight:300">избранном</span>
   </h1>
+  <div class="mono" style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:32px">
+    <%= totalChannels %> каналов · <%= totalPrograms %> передач
+  </div>
 
-  <% if (favChannels.length === 0 && favPrograms.length === 0) { %>
-    <div style="text-align:center;padding:48px 24px;border:1px solid var(--border);border-radius:var(--radius);color:var(--muted)">
-      <div style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.2em;margin-bottom:16px">— Пусто —</div>
+  <% if (totalChannels === 0 && totalPrograms === 0) { %>
+    <div class="card" style="text-align:center;padding:48px 24px;color:var(--muted)">
+      <div class="mono" style="font-size:11px;text-transform:uppercase;letter-spacing:.2em;margin-bottom:16px">— Пусто —</div>
       <p style="margin:0 0 20px;font-size:14px">У вас пока нет ничего в избранном.</p>
-      <div style="display:flex;gap:8px;justify-content:center">
-        <a href="/" class="btn">К расписанию</a>
-      </div>
+      <a href="/" class="btn btn-primary">К расписанию</a>
     </div>
   <% } %>
 
-  <% if (favChannels.length > 0) { %>
-    <div style="display:flex;align-items:end;justify-content:space-between;margin-bottom:14px">
-      <div>
-        <h2 style="font-size:22px;font-weight:500;margin:0">Любимые каналы</h2>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px"><%= favChannels.length %> канала</div>
+  <%# === Карусель любимых передач === %>
+  <% if (carouselPrograms.length > 0) { %>
+    <section class="fav-carousel-section">
+      <div class="section-head">
+        <div class="section-head-mark">
+          <span class="section-num">I</span>
+        </div>
+        <div>
+          <h2>Карусель любимых передач</h2>
+          <div class="section-sub"><%= carouselPrograms.length %> ближайших</div>
+        </div>
+        <div class="carousel-controls">
+          <button class="btn btn-sm" id="carouselPrev" type="button">‹</button>
+          <button class="btn btn-sm" id="carouselNext" type="button">›</button>
+        </div>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:40px">
-      <% favChannels.forEach(function(channel) { %>
-        <div class="card" style="padding:20px;display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:center">
-          <div style="font-family:var(--font-mono);font-weight:300;font-size:32px;color:var(--muted);line-height:1;text-align:right"><%= String(channel.id).padStart(2,'0') %></div>
-          <div>
-            <div style="font-size:18px;font-weight:500;line-height:1"><%= channel.name %></div>
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:6px"><%= channel.category || 'Канал' %></div>
-            <div style="display:flex;gap:6px;margin-top:12px">
-              <a href="/" class="btn btn-sm">Расписание</a>
-              <button class="btn btn-sm btn-danger js-fav-remove" data-type="channel" data-id="<%= channel.id %>">★ Убрать</button>
+      <div class="fav-carousel" id="favCarousel">
+        <% carouselPrograms.forEach(function(p) { %>
+          <article class="fav-carousel-card" data-program-id="<%= p.id %>">
+            <div class="fav-carousel-poster">
+              <% if (p.poster_path) { %>
+                <img src="<%= p.poster_path %>" alt="<%= p.title %>">
+              <% } else { %>
+                <div class="fav-carousel-poster-ph"><%= p.title.charAt(0).toUpperCase() %></div>
+              <% } %>
+              <% if (p.age_code) { %><span class="tag age fav-carousel-age"><%= p.age_code %></span><% } %>
             </div>
-          </div>
-        </div>
-      <% }); %>
-    </div>
+            <div class="fav-carousel-body">
+              <h4 title="<%= p.title %>"><%= p.title %></h4>
+              <div class="mono" style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:6px">
+                <%= p.genre_name || '—' %><% if (p.duration_min) { %> · <%= p.duration_min %> мин<% } %>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    </section>
   <% } %>
 
-  <% if (favPrograms.length > 0) { %>
-    <div style="display:flex;align-items:end;justify-content:space-between;margin-bottom:14px">
-      <div>
-        <h2 style="font-size:22px;font-weight:500;margin:0">Любимые передачи</h2>
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px"><%= favPrograms.length %> передач</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
-      <% favPrograms.forEach(function(program) { %>
-        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
-          <%- include('../partials/program-card', { program }) %>
-          <div style="display:flex;justify-content:flex-end;margin-top:auto">
-            <button class="btn btn-sm btn-danger js-fav-remove" data-type="program" data-id="<%= program.id %>">★ Убрать</button>
-          </div>
+  <%# === Любимые каналы === %>
+  <% if (totalChannels > 0) { %>
+    <section class="fav-section" id="channelsSection">
+      <div class="section-head">
+        <div class="section-head-mark"><span class="section-num">II</span></div>
+        <div>
+          <h2>Любимые каналы</h2>
+          <div class="section-sub" id="channelsSub"><%= totalChannels %> каналов</div>
         </div>
-      <% }); %>
-    </div>
+        <div class="section-filters">
+          <input id="chSearch" class="input" type="search" placeholder="Поиск канала…" value="<%= chParams.search || '' %>" style="width:220px">
+          <select id="chSort" class="select" style="width:170px">
+            <option value="added_at:desc"   <%= chParams.sortBy==='added_at' && chParams.sortDir==='desc' ? 'selected' : '' %>>Новые сверху</option>
+            <option value="added_at:asc"    <%= chParams.sortBy==='added_at' && chParams.sortDir==='asc'  ? 'selected' : '' %>>Старые сверху</option>
+            <option value="name:asc"        <%= chParams.sortBy==='name'     && chParams.sortDir==='asc'  ? 'selected' : '' %>>По названию А→Я</option>
+            <option value="name:desc"       <%= chParams.sortBy==='name'     && chParams.sortDir==='desc' ? 'selected' : '' %>>По названию Я→А</option>
+            <option value="category:asc"    <%= chParams.sortBy==='category' && chParams.sortDir==='asc'  ? 'selected' : '' %>>По категории</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fav-grid fav-grid-channels" id="channelsGrid"></div>
+      <div class="fav-empty" id="channelsEmpty" style="display:none">— Каналов не найдено —</div>
+
+      <div class="fav-footer">
+        <div id="channelsStat" class="page-info"></div>
+        <div class="pagination" id="channelsPagination"></div>
+      </div>
+    </section>
+  <% } %>
+
+  <%# === Любимые передачи === %>
+  <% if (totalPrograms > 0) { %>
+    <section class="fav-section" id="programsSection">
+      <div class="section-head">
+        <div class="section-head-mark"><span class="section-num">III</span></div>
+        <div>
+          <h2>Любимые передачи</h2>
+          <div class="section-sub" id="programsSub"><%= totalPrograms %> передач · уведомления приходят по подписке</div>
+        </div>
+        <div class="section-filters">
+          <input id="prSearch" class="input" type="search" placeholder="Поиск передачи…" value="<%= prParams.search || '' %>" style="width:220px">
+          <select id="prSort" class="select" style="width:170px">
+            <option value="added_at:desc"  <%= prParams.sortBy==='added_at' && prParams.sortDir==='desc' ? 'selected' : '' %>>Новые сверху</option>
+            <option value="added_at:asc"   <%= prParams.sortBy==='added_at' && prParams.sortDir==='asc'  ? 'selected' : '' %>>Старые сверху</option>
+            <option value="title:asc"      <%= prParams.sortBy==='title'    && prParams.sortDir==='asc'  ? 'selected' : '' %>>По названию А→Я</option>
+            <option value="title:desc"     <%= prParams.sortBy==='title'    && prParams.sortDir==='desc' ? 'selected' : '' %>>По названию Я→А</option>
+            <option value="duration:desc"  <%= prParams.sortBy==='duration' && prParams.sortDir==='desc' ? 'selected' : '' %>>По длит. (длинные)</option>
+            <option value="duration:asc"   <%= prParams.sortBy==='duration' && prParams.sortDir==='asc'  ? 'selected' : '' %>>По длит. (короткие)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fav-grid fav-grid-programs" id="programsGrid"></div>
+      <div class="fav-empty" id="programsEmpty" style="display:none">— Передач не найдено —</div>
+
+      <div class="fav-footer">
+        <div id="programsStat" class="page-info"></div>
+        <div class="pagination" id="programsPagination"></div>
+      </div>
+    </section>
   <% } %>
 </section>
 
+<style>
+  .favorites-page .section-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: end; gap: 14px;
+    margin: 0 0 18px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+  }
+  .favorites-page .section-head h2 {
+    margin: 0; font-size: 24px; font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .favorites-page .section-head-mark { align-self: end; }
+  .favorites-page .section-num {
+    font-family: var(--font-mono); font-weight: 300; font-size: 36px;
+    color: var(--primary); line-height: 0.9;
+  }
+  .favorites-page .section-sub {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; margin-top: 6px;
+  }
+  .favorites-page .section-filters {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .favorites-page .fav-section { margin-bottom: 48px; }
+  .favorites-page .fav-grid { display: grid; gap: 14px; margin-bottom: 18px; }
+  .favorites-page .fav-grid-channels { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .favorites-page .fav-grid-programs { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .favorites-page .fav-empty {
+    padding: 36px 16px; text-align: center;
+    color: var(--muted); font-family: var(--font-mono);
+    font-size: 11px; text-transform: uppercase; letter-spacing: .14em;
+    border: 1px dashed var(--border-soft);
+    margin-bottom: 18px;
+  }
+  .favorites-page .fav-footer {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  /* Channel card */
+  .favorites-page .fav-card-channel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: grid; grid-template-columns: 54px 1fr; gap: 14px;
+    align-items: center;
+    transition: border-color .15s, transform .15s;
+  }
+  .favorites-page .fav-card-channel:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .favorites-page .fav-card-channel .ch-num {
+    font-family: var(--font-mono); font-weight: 300; font-size: 36px;
+    color: var(--muted); line-height: 1; text-align: right;
+  }
+  .favorites-page .fav-card-channel h4 {
+    margin: 0; font-size: 20px; font-weight: 500;
+    line-height: 1; letter-spacing: -0.01em;
+  }
+  .favorites-page .fav-card-channel .ch-cat {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; margin-top: 6px;
+  }
+  .favorites-page .fav-card-channel .ch-actions {
+    display: flex; gap: 6px; margin-top: 14px;
+  }
+  .favorites-page .fav-card-channel.is-inactive { opacity: 0.55; }
+
+  /* Program card */
+  .favorites-page .fav-card-program {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color .15s, transform .15s;
+  }
+  .favorites-page .fav-card-program:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .favorites-page .fav-poster {
+    aspect-ratio: 3 / 4;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    display: grid; place-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .favorites-page .fav-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .favorites-page .fav-poster-ph {
+    font-family: var(--font-mono); font-weight: 300;
+    font-size: 48px; color: var(--muted);
+  }
+  .favorites-page .fav-card-program h4 {
+    margin: 0; font-size: 16px; font-weight: 500;
+    line-height: 1.2; letter-spacing: -0.01em;
+  }
+  .favorites-page .fav-card-program .pr-meta {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .favorites-page .notify-toggles {
+    display: flex; gap: 6px; margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .favorites-page .notify-pill {
+    flex: 1; min-width: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 6px 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted);
+    transition: all .15s;
+    user-select: none;
+  }
+  .favorites-page .notify-pill input { display: none; }
+  .favorites-page .notify-pill:hover { border-color: var(--primary); }
+  .favorites-page .notify-pill.is-on {
+    background: var(--accent-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .favorites-page .pr-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: auto;
+  }
+
+  /* Carousel */
+  .favorites-page .fav-carousel-section { margin-bottom: 48px; }
+  .favorites-page .fav-carousel {
+    display: grid; grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    scrollbar-color: var(--surface-3) var(--surface);
+  }
+  .favorites-page .fav-carousel::-webkit-scrollbar { height: 6px; }
+  .favorites-page .fav-carousel::-webkit-scrollbar-track { background: var(--surface); }
+  .favorites-page .fav-carousel::-webkit-scrollbar-thumb { background: var(--surface-3); }
+  .favorites-page .fav-carousel-card {
+    scroll-snap-align: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: border-color .15s, transform .15s;
+  }
+  .favorites-page .fav-carousel-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .favorites-page .fav-carousel-poster {
+    aspect-ratio: 3 / 4;
+    background: var(--surface-2);
+    position: relative;
+    overflow: hidden;
+  }
+  .favorites-page .fav-carousel-poster img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .favorites-page .fav-carousel-poster-ph {
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-weight: 300;
+    font-size: 56px; color: var(--muted);
+  }
+  .favorites-page .fav-carousel-age {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 9px;
+  }
+  .favorites-page .fav-carousel-body { padding: 10px 12px 12px; }
+  .favorites-page .fav-carousel-body h4 {
+    margin: 0; font-size: 14px; font-weight: 500;
+    line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .favorites-page .carousel-controls { display: flex; gap: 4px; }
+
+  @media (max-width: 700px) {
+    .favorites-page .section-head { grid-template-columns: auto 1fr; }
+    .favorites-page .section-filters { grid-column: 1 / -1; flex-wrap: wrap; }
+    .favorites-page .fav-grid-channels,
+    .favorites-page .fav-grid-programs { grid-template-columns: 1fr; }
+  }
+</style>
+
 <script>
-$(function() {
-  $('.js-fav-remove').on('click', function() {
-    const $btn = $(this);
-    const type = $btn.data('type'), id = $btn.data('id');
-    if (!confirm('Убрать из избранного?')) return;
-    $.ajax({ url: `/client/api/favorites/${type}/${id}`, method: 'DELETE' })
-      .done(() => location.reload())
-      .fail((xhr) => alert('Ошибка: ' + (xhr.responseJSON?.message || xhr.statusText)));
-  });
-});
+  window.__FAVORITES_INITIAL__ = {
+    channels: <%- JSON.stringify(favChannels || []) %>,
+    totalChannels: <%= totalChannels %>,
+    chParams: <%- JSON.stringify(chParams) %>,
+    programs: <%- JSON.stringify(favPrograms || []) %>,
+    totalPrograms: <%= totalPrograms %>,
+    prParams: <%- JSON.stringify(prParams) %>
+  };
 </script>
+<script src="/js/roles/client-favorites.js"></script>

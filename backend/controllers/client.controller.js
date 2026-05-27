@@ -63,14 +63,51 @@ async function renderDashboard(req, res, next) {
   } catch (err) { next(err); }
 }
 
+function parseFavoritesQuery(q, kind) {
+  const limitDefault = kind === 'channel' ? 12 : 12;
+  return {
+    limit: Math.min(parseInt(q['l_' + kind] || q.limit || String(limitDefault), 10), 100),
+    offset: parseInt(q['o_' + kind] || q.offset || '0', 10),
+    search: q['q_' + kind] || '',
+    sortBy: q['s_' + kind] || 'added_at',
+    sortDir: q['d_' + kind] || 'desc',
+  };
+}
+
+async function listFavoritesItems(req, res, next) {
+  try {
+    const kind = req.query.kind === 'channel' ? 'channel' : 'program';
+    const params = parseFavoritesQuery(req.query, kind);
+    const [items, total] = kind === 'channel'
+      ? await Promise.all([
+          favoriteModel.listChannels(req.user.id, params),
+          favoriteModel.countChannels(req.user.id, params),
+        ])
+      : await Promise.all([
+          favoriteModel.listPrograms(req.user.id, params),
+          favoriteModel.countPrograms(req.user.id, params),
+        ]);
+    ok(res, items, { total, limit: params.limit, offset: params.offset });
+  } catch (err) { next(err); }
+}
+
 async function renderFavorites(req, res, next) {
   try {
-    const favorites = await favoriteModel.list(req.user.id);
-    const channelIds = favorites.filter((f) => f.target_type === 'channel').map((f) => f.target_id);
-    const programIds = favorites.filter((f) => f.target_type === 'program').map((f) => f.target_id);
-    const favChannels = await channelModel.findByIds(channelIds);
-    const favPrograms = await programModel.findByIds(programIds);
-    res.render('client/favorites', { title: 'Избранное', favChannels, favPrograms });
+    const chParams = parseFavoritesQuery(req.query, 'channel');
+    const prParams = parseFavoritesQuery(req.query, 'program');
+    const [favChannels, totalChannels, favPrograms, totalPrograms, carouselPrograms] = await Promise.all([
+      favoriteModel.listChannels(req.user.id, chParams),
+      favoriteModel.countChannels(req.user.id, chParams),
+      favoriteModel.listPrograms(req.user.id, prParams),
+      favoriteModel.countPrograms(req.user.id, prParams),
+      favoriteModel.listPrograms(req.user.id, { sortBy: 'added_at', sortDir: 'desc', limit: 12, offset: 0 }),
+    ]);
+    res.render('client/favorites', {
+      title: 'Избранное', active: 'favorites',
+      favChannels, totalChannels, chParams,
+      favPrograms, totalPrograms, prParams,
+      carouselPrograms,
+    });
   } catch (err) { next(err); }
 }
 
@@ -93,7 +130,7 @@ async function renderSubscriptions(req, res, next) {
 }
 
 module.exports = {
-  listFavorites, addFavorite, removeFavorite,
+  listFavorites, listFavoritesItems, addFavorite, removeFavorite,
   listSubscriptions, addSubscription, removeSubscription,
   renderDashboard, renderFavorites, renderSubscriptions,
 };
