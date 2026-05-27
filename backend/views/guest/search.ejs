@@ -63,12 +63,13 @@ function pluralize(n, one, few, many) {
       <%# === Результаты с датой — список слотов === %>
       <table class="data-table slots-table">
         <thead>
-          <tr><th>Время</th><th>Канал</th><th>Передача</th><th>Жанр</th><th>Возраст</th><th>Длительность</th></tr>
+          <tr><th>Время</th><th>Канал</th><th>Передача</th><th>Жанр</th><th>Возраст</th><th>Длительность</th><% if (user) { %><th style="width:48px"></th><% } %></tr>
         </thead>
         <tbody>
           <% results.items.forEach(function(s) { %>
             <% const start = new Date(s.starts_at); %>
             <% const end = new Date(s.ends_at); %>
+            <% const isFav = user && favProgramIds.indexOf(s.program_id) !== -1; %>
             <tr>
               <td class="time-cell">
                 <%= String(start.getHours()).padStart(2,'0') %>:<%= String(start.getMinutes()).padStart(2,'0') %>
@@ -83,6 +84,13 @@ function pluralize(n, one, few, many) {
               <td><% if (s.genre_name) { %><span class="tag"><%= s.genre_name %></span><% } %></td>
               <td><% if (s.age_code) { %><span class="tag age"><%= s.age_code %></span><% } %></td>
               <td><%= s.duration_min %> мин</td>
+              <% if (user) { %>
+                <td class="fav-cell">
+                  <button type="button" class="btn-fav-mini <%= isFav ? 'is-fav' : '' %>"
+                          data-type="program" data-id="<%= s.program_id %>" data-active="<%= isFav ? '1' : '0' %>"
+                          title="<%= isFav ? 'Убрать из избранного' : 'В избранное' %>"><%= isFav ? '♥' : '♡' %></button>
+                </td>
+              <% } %>
             </tr>
           <% }); %>
         </tbody>
@@ -128,8 +136,12 @@ function pluralize(n, one, few, many) {
                 <% } %>
               </div>
               <% if (user) { %>
-                <button class="btn btn-sm btn-fav-card" data-type="program" data-id="<%= program.id %>" title="В избранное">
-                  ♡ В избранное
+                <% const isFav = favProgramIds.indexOf(program.id) !== -1; %>
+                <button class="btn btn-sm btn-fav-card <%= isFav ? 'is-fav' : '' %>"
+                        data-type="program" data-id="<%= program.id %>"
+                        data-active="<%= isFav ? '1' : '0' %>"
+                        title="<%= isFav ? 'Убрать из избранного' : 'В избранное' %>">
+                  <%= isFav ? '♥ В избранном' : '♡ В избранное' %>
                 </button>
               <% } %>
             </div>
@@ -163,6 +175,11 @@ function pluralize(n, one, few, many) {
   .channel-chip:hover { background: var(--primary); border-color: var(--primary); text-decoration: none; color: #fff; }
   .btn-fav-card { margin-top: 8px; display: block; width: 100%; }
   .btn-fav-card.is-fav { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .slots-table .fav-cell { text-align: center; padding: 4px; }
+  .btn-fav-mini { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 26px; height: 26px; border-radius: 2px; font-size: 12px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-family: var(--font-mono); }
+  .btn-fav-mini:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+  .btn-fav-mini.is-fav { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .btn-fav-mini:disabled { opacity: 0.4; cursor: wait; }
   @media (max-width: 700px) {
     .search-form { grid-template-columns: 1fr; }
     .search-form .span-3, .form-buttons { grid-column: span 1; }

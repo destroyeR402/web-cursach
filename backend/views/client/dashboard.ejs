@@ -30,7 +30,8 @@
             <% const now = new Date(); %>
             <% const end = new Date(s.ends_at); %>
             <% const isLive = start <= now && now < end; %>
-            <div class="slot <%= isLive ? 'slot-live' : '' %>" style="padding:12px 0;border-left:none;border-bottom:1px solid var(--border-soft);background:transparent;align-items:flex-start">
+            <% const isProgFav = favProgramIds.indexOf(s.program_id) !== -1; %>
+            <div class="slot <%= isLive ? 'slot-live' : '' %>" style="padding:12px 0;border-left:none;border-bottom:1px solid var(--border-soft);background:transparent;align-items:flex-start;display:flex;gap:12px">
               <time style="min-width:50px;padding-top:2px"><%= String(start.getHours()).padStart(2,'0') %>:<%= String(start.getMinutes()).padStart(2,'0') %></time>
               <div style="flex:1">
                 <div style="font-weight:500;font-size:14px"><%= s.program_title %></div>
@@ -40,6 +41,9 @@
                 </div>
               </div>
               <% if (s.age_code) { %><span class="tag age"><%= s.age_code %></span><% } %>
+              <button type="button" class="btn-fav-mini <%= isProgFav ? 'is-fav' : '' %>"
+                      data-type="program" data-id="<%= s.program_id %>" data-active="<%= isProgFav ? '1' : '0' %>"
+                      title="<%= isProgFav ? 'Убрать передачу из избранного' : 'Передачу в избранное' %>"><%= isProgFav ? '♥' : '♡' %></button>
             </div>
           <% }); %>
         <% } %>
@@ -80,6 +84,10 @@
 <style>
   .live-badge-small { color: var(--danger); font-size: 10px; font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .1em; animation: pulse 1.4s infinite; }
   [data-role="favorite-toggle"].is-fav { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .dashboard .btn-fav-mini { background: transparent; border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 2px; font-size: 13px; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-family: var(--font-mono); flex-shrink: 0; }
+  .dashboard .btn-fav-mini:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+  .dashboard .btn-fav-mini.is-fav { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .dashboard .btn-fav-mini:disabled { opacity: 0.4; cursor: wait; }
 </style>
 
 <script>
