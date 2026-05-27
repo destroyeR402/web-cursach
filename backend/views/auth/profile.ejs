@@ -4,25 +4,42 @@
     Личные <span style="color:var(--primary);font-weight:300">данные</span>
   </h1>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+  <div class="profile-grid">
     <!-- Identity card -->
     <div class="card" style="padding:28px">
       <div class="eyebrow" style="margin-bottom:16px">Карточка читателя · ID <%= String(user.id).padStart(5,'0') %></div>
-      <div style="display:grid;grid-template-columns:88px 1fr;gap:20px;align-items:start">
+      <div style="display:grid;grid-template-columns:96px 1fr;gap:20px;align-items:start">
         <div>
           <% if (user.avatar_path) { %>
-            <img id="avatarPreview" class="avatar" style="width:88px;height:88px;border-radius:var(--radius)" src="<%= user.avatar_path %>" alt="">
+            <img id="avatarPreview" class="avatar" style="width:96px;height:96px;border-radius:50%;object-fit:cover" src="<%= user.avatar_path %>" alt="">
           <% } else { %>
-            <div id="avatarPreview" class="avatar avatar-placeholder" style="width:88px;height:88px;border-radius:var(--radius);font-size:2rem;background:var(--surface-3);border:1px solid var(--border)"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
+            <div id="avatarPreview" class="avatar avatar-placeholder" style="width:96px;height:96px;border-radius:50%;font-size:2rem;background:var(--surface-3);border:1px solid var(--border)"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
           <% } %>
         </div>
-        <dl style="margin:0;display:grid;grid-template-columns:90px 1fr;row-gap:8px;column-gap:12px;font-size:13px;align-items:start">
-          <dt style="margin:0">Email</dt><dd style="margin:0"><%= user.email %></dd>
-          <dt style="margin:0">Логин</dt><dd style="margin:0"><%= user.username %></dd>
-          <dt style="margin:0">Имя</dt><dd style="margin:0" id="profileDisplayName"><%= user.display_name || '—' %></dd>
-          <dt style="margin:0">Роль</dt><dd style="margin:0"><span class="tag role-badge role-<%= user.role %>"><%= user.role %></span></dd>
-          <dt style="margin:0">Создан</dt><dd style="margin:0;font-family:var(--font-mono);font-size:11px"><%= new Date(user.created_at).toLocaleString('ru-RU') %></dd>
+        <dl class="profile-dl">
+          <dt>Email</dt><dd><%= user.email %></dd>
+          <dt>Логин</dt><dd><%= user.username %></dd>
+          <dt>Имя</dt><dd id="profileDisplayName"><%= user.display_name || '—' %></dd>
+          <dt>Роль</dt><dd><span class="tag role-badge role-<%= user.role %>"><%= user.role %></span></dd>
+          <dt>Создан</dt><dd class="mono" style="font-size:11px"><%= new Date(user.created_at).toLocaleString('ru-RU') %></dd>
         </dl>
+      </div>
+
+      <hr class="divider-thin">
+
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-n"><%= String(stats.fav_channels).padStart(2,'0') %></div>
+          <div class="profile-stat-t">избранных каналов</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-n"><%= String(stats.fav_programs).padStart(2,'0') %></div>
+          <div class="profile-stat-t">избранных передач</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-n"><%= String(stats.subs).padStart(2,'0') %></div>
+          <div class="profile-stat-t">активных подписок</div>
+        </div>
       </div>
     </div>
 
@@ -36,33 +53,121 @@
             <input class="input" type="text" name="displayName" value="<%= user.display_name || '' %>" maxlength="128" placeholder="Имя для отображения">
           </div>
           <div>
+            <label class="label">Email (только для чтения)</label>
+            <input class="input" type="email" value="<%= user.email %>" disabled style="opacity:.6;cursor:not-allowed">
+          </div>
+          <div>
             <label class="label">Аватар</label>
-            <div style="display:flex;gap:12px;align-items:center">
-              <div class="avatar avatar-placeholder" style="width:56px;height:56px;border-radius:var(--radius);font-size:1.2rem;background:var(--surface-3);border:1px solid var(--border);flex-shrink:0"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
+            <div style="display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:center">
+              <div class="avatar avatar-placeholder" id="avatarFormPreview" style="width:72px;height:72px;border-radius:50%;font-size:1.3rem;background:var(--surface-3);border:1px solid var(--border);overflow:hidden;background-size:cover;background-position:center"><%= (user.display_name || user.username).charAt(0).toUpperCase() %></div>
               <div style="display:flex;flex-direction:column;gap:6px">
-                <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp" id="avatarInput" class="input" style="font-size:11px;padding:7px 10px">
-                <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em">PNG / JPG / WEBP · до 5 МБ</span>
+                <label for="avatarInput" class="btn btn-sm" style="text-align:center;cursor:pointer">Выбрать файл…</label>
+                <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp" id="avatarInput" style="display:none">
+                <span class="mono muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.12em" id="avatarFileName">PNG / JPG / WEBP · до 5 МБ</span>
               </div>
             </div>
           </div>
-          <div style="display:flex;justify-content:flex-end;padding-top:8px">
+          <div style="display:flex;justify-content:flex-end;padding-top:4px">
             <button type="submit" id="btnSave" class="btn btn-primary">Сохранить</button>
           </div>
         </div>
       </form>
+
+      <hr class="divider-thin">
+
+      <div class="eyebrow" style="margin-bottom:16px">Сменить пароль</div>
+      <form id="passwordForm">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <label class="label">Текущий пароль</label>
+            <input class="input" type="password" name="currentPassword" autocomplete="current-password" required>
+          </div>
+          <div>
+            <label class="label">Новый пароль (мин. 6 символов)</label>
+            <input class="input" type="password" name="newPassword" minlength="6" autocomplete="new-password" required>
+          </div>
+          <div style="display:flex;justify-content:flex-end;padding-top:4px">
+            <button type="submit" id="btnChangePassword" class="btn btn-primary">Изменить пароль</button>
+          </div>
+        </div>
+      </form>
+
+      <% if (user.role !== 'admin') { %>
+        <hr class="divider-thin">
+        <div class="eyebrow" style="margin-bottom:8px;color:var(--danger)">Опасная зона</div>
+        <p class="muted" style="font-size:12px;margin:0 0 14px">Удаление аккаунта необратимо. Все ваши избранное, подписки и история будут стёрты.</p>
+        <button type="button" class="btn btn-danger btn-sm" id="btnDeleteAccount">Удалить аккаунт</button>
+      <% } %>
     </div>
   </div>
 </section>
 
+<style>
+  .profile-page .profile-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  .profile-dl {
+    margin: 0;
+    display: grid; grid-template-columns: 100px 1fr;
+    row-gap: 10px; column-gap: 14px;
+    font-size: 13px; align-items: start;
+  }
+  .profile-dl dt {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+  }
+  .profile-dl dd { margin: 0; }
+  .profile-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    margin-top: 4px;
+  }
+  .profile-stat {
+    padding: 4px 14px 0 0;
+    border-right: 1px solid var(--border-soft);
+  }
+  .profile-stat:last-child { border-right: none; }
+  .profile-stat-n {
+    font-family: var(--font-sans);
+    font-weight: 300; font-size: 38px; line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .profile-stat-t {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) {
+    .profile-page .profile-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
 <script>
 $(function () {
+  function previewAvatarFromUrl(url) {
+    var $img = $('<img>').attr('src', url).addClass('avatar').css({
+      width: 96, height: 96, borderRadius: '50%', objectFit: 'cover'
+    }).attr('id', 'avatarPreview');
+    $('#avatarPreview').replaceWith($img);
+    $('#avatarFormPreview').css({
+      backgroundImage: 'url("' + url + '")',
+      backgroundColor: 'transparent',
+    }).text('');
+  }
+
   $('#avatarInput').on('change', function (e) {
     var f = e.target.files && e.target.files[0];
     if (!f) return;
+    $('#avatarFileName').text(f.name + ' · ' + Math.round(f.size / 1024) + ' КБ');
     var r = new FileReader();
-    r.onload = function (ev) {
-      $('#avatarPreview').replaceWith('<img id="avatarPreview" class="avatar" src="' + ev.target.result + '">');
-    };
+    r.onload = function (ev) { previewAvatarFromUrl(ev.target.result); };
     r.readAsDataURL(f);
   });
 
@@ -83,15 +188,57 @@ $(function () {
         var name = u.display_name || u.username || '—';
         $('#profileDisplayName').text(u.display_name || '—');
         $('#headerUserName').text(name);
-        if (u.avatar_path) {
-          $('#avatarPreview').replaceWith('<img id="avatarPreview" class="avatar" src="' + u.avatar_path + '?t=' + Date.now() + '">');
-        }
+        if (u.avatar_path) previewAvatarFromUrl(u.avatar_path + '?t=' + Date.now());
       }
       toast('Профиль успешно обновлён');
     }).fail(function (xhr) {
       toast(xhrErr(xhr), 'error');
     }).always(function () {
       $btn.prop('disabled', false).text('Сохранить');
+    });
+  });
+
+  $('#passwordForm').on('submit', function (e) {
+    e.preventDefault();
+    var $form = $(this);
+    var $btn = $('#btnChangePassword').prop('disabled', true).text('Сохранение…');
+    var data = {
+      currentPassword: $form.find('[name=currentPassword]').val(),
+      newPassword: $form.find('[name=newPassword]').val(),
+    };
+
+    $.ajax({
+      url: '/auth/password',
+      method: 'PATCH',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+    }).done(function () {
+      toast('Пароль изменён');
+      $form[0].reset();
+    }).fail(function (xhr) {
+      toast(xhrErr(xhr), 'error');
+    }).always(function () {
+      $btn.prop('disabled', false).text('Изменить пароль');
+    });
+  });
+
+  $('#btnDeleteAccount').on('click', function () {
+    var pwd = prompt('Удаление аккаунта необратимо.\nВведите ваш пароль для подтверждения:');
+    if (!pwd) return;
+    if (!confirm('Точно удалить аккаунт? Все ваши избранное, подписки и история будут стёрты.')) return;
+
+    var $btn = $(this).prop('disabled', true).text('Удаление…');
+    $.ajax({
+      url: '/auth/profile',
+      method: 'DELETE',
+      contentType: 'application/json',
+      data: JSON.stringify({ password: pwd }),
+    }).done(function () {
+      toast('Аккаунт удалён. Перенаправление…');
+      setTimeout(function () { window.location = '/'; }, 800);
+    }).fail(function (xhr) {
+      $btn.prop('disabled', false).text('Удалить аккаунт');
+      toast(xhrErr(xhr), 'error');
     });
   });
 });
