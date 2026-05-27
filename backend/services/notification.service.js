@@ -125,26 +125,65 @@ async function sendEmail(to, subject, body) {
 async function flush() {
   let sent = 0
   console.log(`[notify:flush] starting flush, queueSize=${queue.length}, smtpConfigured=${smtpConfigured()}`)
-  while (queue.length) {
-    const job = queue.shift()
-    try {
-      if (job.kind === 'email') {
-        console.log(`[notify:proc] processing email job -> to:${job.to} user:${job.userId} reason:${job.subject}`)
-        const ok = await sendEmail(job.to, job.subject, job.body)
-        console.log(`[notify:result] email ${ok ? 'sent' : 'failed'} -> ${job.to} user:${job.userId} subject:${job.subject}`)
-      } else if (job.kind === 'push') {
-        // TODO: integrate real push service
-        console.log(`[notify:proc] processing push job -> user:${job.to} reason:${job.subject}`)
-        console.log(`[notify:push] → user:${job.to} · ${job.subject}`)
-      } else {
-        console.log(`[notify] unknown job kind ${job.kind}`)
-      }
-      await auditLog.log({ userId: job.userId, action: `notify.${job.kind}`, meta: { subject: job.subject } })
-      sent++
-    } catch (err) {
-      console.error('[notify] job processing error:', err && err.stack ? err.stack : (err.message || err))
+
+  // take snapshot of queue and clear it to avoid processing items added during flush
+  const jobs = queue.splice(0, queue.length)
+
+  // group email jobs by userId (fallback to email address)
+  const emailGroups = new Map()
+  const pushJobs = []
+  for (const job of jobs) {
+    if (job.kind === 'email') {
+      const key = job.userId != null ? String(job.userId) : job.to
+      if (!emailGroups.has(key)) emailGroups.set(key, { to: job.to, userId: job.userId, items: [] })
+      emailGroups.get(key).items.push(job)
+    } else if (job.kind === 'push') {
+      pushJobs.push(job)
+    } else {
+      console.log(`[notify] unknown job kind ${job.kind}`)
     }
   }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>\"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+    })
+  }
+
+  // send grouped emails
+  for (const [key, grp] of emailGroups) {
+    try {
+      const count = grp.items.length
+      const subject = count === 1 ? grp.items[0].subject : `Уведомления (${count}) · ${grp.items[0].subject}`
+      const bodyParts = grp.items.map((it) => {
+        const title = escapeHtml(it.subject)
+        const content = /<[^>]+>/.test(String(it.body || '')) ? it.body : `<pre style="white-space:pre-wrap">${escapeHtml(it.body)}</pre>`
+        return `<section style="margin-bottom:18px"><h3>${title}</h3>${content}</section>`
+      })
+      const combinedBody = bodyParts.join('\n<hr/>\n')
+
+      console.log(`[notify:proc] sending grouped email -> to:${grp.to} user:${grp.userId} items=${count}`)
+      const ok = await sendEmail(grp.to, subject, combinedBody)
+      console.log(`[notify:result] grouped email ${ok ? 'sent' : 'failed'} -> ${grp.to} user:${grp.userId} items=${count}`)
+      await auditLog.log({ userId: grp.userId, action: `notify.email.group`, meta: { count, subjects: grp.items.map(i => i.subject) } })
+      if (ok) sent++
+    } catch (err) {
+      console.error('[notify] grouped email error:', err && err.stack ? err.stack : (err.message || err))
+    }
+  }
+
+  // process push jobs individually
+  for (const job of pushJobs) {
+    try {
+      console.log(`[notify:proc] processing push job -> user:${job.to} reason:${job.subject}`)
+      console.log(`[notify:push] → user:${job.to} · ${job.subject}`)
+      await auditLog.log({ userId: job.userId, action: `notify.push`, meta: { subject: job.subject } })
+      sent++
+    } catch (err) {
+      console.error('[notify] push job processing error:', err && err.stack ? err.stack : (err.message || err))
+    }
+  }
+
   return sent
 }
 
