@@ -1,15 +1,35 @@
 <section class="channels-manage">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;gap:24px;flex-wrap:wrap">
     <div>
       <div class="eyebrow" style="margin-bottom:8px">Администрирование · Каналы</div>
       <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0">
-        Каналы <span style="font-family:var(--font-mono);font-size:18px;color:var(--muted);font-weight:400" id="channelCount">· <%= channels.length %></span>
+        Каналы <span style="font-family:var(--font-mono);font-size:18px;color:var(--muted);font-weight:400" id="channelCount">· всего <%= activity.total %></span>
       </h1>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('formBlock').open=true">+ Добавить канал</button>
+    <button class="btn btn-primary" id="btnOpenForm">+ Добавить канал</button>
   </div>
 
-  <details id="formBlock" style="margin-bottom:24px">
+  <!-- Stat strip -->
+  <div class="channels-stats">
+    <div class="channels-stat">
+      <div class="channels-stat-n"><%= activity.total %></div>
+      <div class="channels-stat-t">всего</div>
+    </div>
+    <div class="channels-stat">
+      <div class="channels-stat-n" style="color:var(--success)"><%= activity.active %></div>
+      <div class="channels-stat-t">активных</div>
+    </div>
+    <div class="channels-stat">
+      <div class="channels-stat-n" style="color:var(--muted)"><%= activity.inactive %></div>
+      <div class="channels-stat-t">выключенных</div>
+    </div>
+    <div class="channels-stat channels-stat-accent">
+      <div class="channels-stat-n"><%= activity.categories %></div>
+      <div class="channels-stat-t">категорий</div>
+    </div>
+  </div>
+
+  <details id="formBlock" style="margin-bottom:24px"<%= params.openForm ? ' open' : '' %>>
     <summary style="cursor:pointer;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);list-style:none;padding:14px 18px;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--radius)">
       <strong id="formTitle" style="color:var(--primary)">+ Добавить канал</strong>
     </summary>
@@ -23,7 +43,10 @@
           <input type="text" name="slug" placeholder="auto из названия" pattern="[a-z0-9-]+">
         </label>
         <label>Категория
-          <input type="text" name="category" placeholder="эфирный / спорт / детский" maxlength="64">
+          <input type="text" name="category" placeholder="эфирный / спорт / детский" maxlength="64" list="categoryHints">
+          <datalist id="categoryHints">
+            <% categories.forEach(function(c) { %><option value="<%= c %>"><% }); %>
+          </datalist>
         </label>
         <label>Активен
           <select name="isActive">
@@ -48,45 +71,121 @@
     </form>
   </details>
 
+  <div class="card" style="padding:14px 16px;margin-bottom:14px">
+    <div class="channels-filters">
+      <div class="channels-filter">
+        <span class="label">Поиск</span>
+        <input id="fSearch" class="input" type="search" placeholder="Название, slug, описание…" value="<%= params.search || '' %>">
+      </div>
+      <div class="channels-filter">
+        <span class="label">Категория</span>
+        <select id="fCategory" class="select">
+          <option value="">— все —</option>
+          <% categories.forEach(function(c) { %>
+            <option value="<%= c %>" <%= params.category === c ? 'selected' : '' %>><%= c %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="channels-filter">
+        <span class="label">Статус</span>
+        <select id="fStatus" class="select">
+          <option value="">— все —</option>
+          <option value="true"  <%= params.isActive === true  ? 'selected' : '' %>>Активные</option>
+          <option value="false" <%= params.isActive === false ? 'selected' : '' %>>Выключенные</option>
+        </select>
+      </div>
+      <div class="channels-filter channels-filter-actions">
+        <button class="btn btn-sm" id="fReset" type="button">Сбросить</button>
+      </div>
+    </div>
+  </div>
+
   <div class="card" style="overflow:hidden">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Лого</th><th>Название</th><th>Slug</th><th>Категория</th><th>Активен</th><th>Описание</th><th></th>
-      </tr>
-    </thead>
-    <tbody id="channelsTbody">
-      <% channels.forEach(function(c) { %>
-        <tr data-id="<%= c.id %>"
-            data-name="<%= c.name %>"
-            data-slug="<%= c.slug %>"
-            data-category="<%= c.category || '' %>"
-            data-description="<%= c.description || '' %>"
-            data-active="<%= c.is_active ? 'true' : 'false' %>">
-          <td>
-            <% if (c.logo_path) { %>
-              <img src="<%= c.logo_path %>" class="thumb">
-            <% } else { %>
-              <div class="thumb-placeholder"><%= c.name.charAt(0) %></div>
-            <% } %>
-          </td>
-          <td><strong><%= c.name %></strong></td>
-          <td><code><%= c.slug %></code></td>
-          <td><%= c.category || '—' %></td>
-          <td><%= c.is_active ? '✔' : '×' %></td>
-          <td class="desc-cell"><%= c.description || '' %></td>
-          <td class="actions-cell">
-            <button class="btn btn-sm js-edit" data-id="<%= c.id %>">✎</button>
-            <button class="btn btn-sm btn-danger js-del" data-id="<%= c.id %>">×</button>
-          </td>
+    <table class="data-table" id="channelsTable">
+      <thead>
+        <tr>
+          <th style="width:60px">Лого</th>
+          <th class="js-sort" data-sort="id" style="width:60px;cursor:pointer">№ <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="name" style="cursor:pointer">Название <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="slug" style="width:140px;cursor:pointer">Slug <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="category" style="width:170px;cursor:pointer">Категория <span class="sort-ind"></span></th>
+          <th class="js-sort" data-sort="is_active" style="width:110px;cursor:pointer">Активен <span class="sort-ind"></span></th>
+          <th>Описание</th>
+          <th style="width:90px"></th>
         </tr>
-      <% }); %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody id="channelsTbody"></tbody>
+    </table>
+    <div id="channelsEmpty" style="display:none;padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase">
+      Каналов не найдено
+    </div>
+  </div>
+
+  <div class="channels-footer">
+    <div id="channelsStat" class="page-info"></div>
+    <div class="pagination" id="channelsPagination"></div>
+    <div class="channels-pagesize">
+      <span class="label" style="margin:0">На странице</span>
+      <select id="fPageSize" class="select" style="width:auto">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
   </div>
 </section>
 
 <style>
+  .channels-manage .channels-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    background: var(--surface);
+  }
+  .channels-stat {
+    padding: 18px 22px;
+    border-right: 1px solid var(--border);
+  }
+  .channels-stat:last-child { border-right: none; }
+  .channels-stat-accent {
+    background: var(--accent-soft);
+    border-top: 1px solid var(--primary);
+    margin-top: -1px;
+  }
+  .channels-stat-accent .channels-stat-n { color: var(--primary); }
+  .channels-stat-accent .channels-stat-t { color: var(--primary-dark); }
+  .channels-stat-n {
+    font-family: var(--font-sans);
+    font-weight: 300; font-size: 38px; line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .channels-stat-t {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .channels-filters {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1.2fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .channels-filter .label { margin-bottom: 4px; }
+  .channels-filter-actions { display: flex; align-items: end; }
+  .channels-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .channels-pagesize { display: flex; gap: 8px; align-items: center; }
+  .js-sort .sort-ind { color: var(--muted); margin-left: 4px; font-family: var(--font-mono); font-size: 10px; }
+  .js-sort.sort-active .sort-ind { color: var(--primary); }
+  .js-sort:hover { color: var(--primary); }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); }
   .form-grid .span-2 { grid-column: span 2; }
   .form-grid label { margin: 0; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .16em; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
@@ -94,129 +193,36 @@
   .form-grid input, .form-grid select, .form-grid textarea { margin: 0; }
   .form-actions { padding: 14px 20px; background: var(--surface-2); border: 1px solid var(--border); border-top: 1px solid var(--border-soft); display: flex; gap: 8px; }
   .logo-preview { max-width: 100px; max-height: 100px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .thumb { width: 40px; height: 40px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); }
   .thumb-placeholder { width: 40px; height: 40px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 600; color: var(--primary); }
   .desc-cell { max-width: 280px; color: var(--muted); font-size: 12px; }
   .actions-cell { white-space: nowrap; text-align: right; }
   .req { color: var(--danger); }
+  .channel-active-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
   code { background: var(--surface-2); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; font-size: 11px; font-family: var(--font-mono); color: var(--ink-2); }
-  @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: span 1; } }
+  @media (max-width: 900px) {
+    .channels-manage .channels-stats { grid-template-columns: repeat(2, 1fr); }
+    .channels-manage .channels-stats .channels-stat:nth-child(2) { border-right: none; }
+    .channels-filters { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .span-2 { grid-column: span 1; }
+  }
   #formBlock summary::-webkit-details-marker { display: none; }
 </style>
 
 <script>
-$(function () {
-  var $form   = $('#channelForm');
-  var $title  = $('#formTitle');
-  var $submit = $('#btnSubmit');
-  var $preview = $('#logoPreview');
-  var $block  = $('#formBlock');
-
-  function countText(n) { return 'Всего каналов: ' + n; }
-  function rowCount() { return $('#channelsTbody tr').length; }
-
-  function buildRow(c) {
-    var logo = c.logo_path
-      ? '<img src="' + c.logo_path + '" class="thumb">'
-      : '<div class="thumb-placeholder">' + c.name.charAt(0) + '</div>';
-    return '<tr data-id="' + c.id + '" data-name="' + esc(c.name) + '" data-slug="' + esc(c.slug) + '"' +
-      ' data-category="' + esc(c.category || '') + '" data-description="' + esc(c.description || '') + '"' +
-      ' data-active="' + (c.is_active ? 'true' : 'false') + '">' +
-      '<td>' + logo + '</td>' +
-      '<td><strong>' + esc(c.name) + '</strong></td>' +
-      '<td><code>' + esc(c.slug) + '</code></td>' +
-      '<td>' + esc(c.category || '—') + '</td>' +
-      '<td>' + (c.is_active ? '✔' : '×') + '</td>' +
-      '<td class="desc-cell">' + esc(c.description || '') + '</td>' +
-      '<td class="actions-cell">' +
-        '<button class="btn btn-sm js-edit" data-id="' + c.id + '">✎</button> ' +
-        '<button class="btn btn-sm btn-danger js-del" data-id="' + c.id + '">×</button>' +
-      '</td></tr>';
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function resetForm() {
-    $form[0].reset();
-    $form.find('[name=_id]').val('');
-    $form.find('[name=slug]').prop('disabled', false);
-    $title.text('+ Добавить канал');
-    $submit.text('Создать');
-    $preview.hide();
-  }
-
-  $('#logoInput').on('change', function (e) {
-    var f = e.target.files && e.target.files[0]; if (!f) { $preview.hide(); return; }
-    var r = new FileReader();
-    r.onload = function (ev) { $preview.attr('src', ev.target.result).show(); };
-    r.readAsDataURL(f);
-  });
-
-  $(document).on('click', '.js-edit', function () {
-    var $row = $(this).closest('tr');
-    $form.find('[name=_id]').val($row.data('id'));
-    $form.find('[name=name]').val($row.data('name'));
-    $form.find('[name=slug]').val($row.data('slug')).prop('disabled', true);
-    $form.find('[name=category]').val($row.data('category'));
-    $form.find('[name=description]').val($row.data('description'));
-    $form.find('[name=isActive]').val(String($row.data('active')));
-    $title.text('Редактировать канал #' + $row.data('id'));
-    $submit.text('Сохранить');
-    $block.attr('open', 'open');
-    $('html, body').animate({ scrollTop: $form.offset().top - 80 }, 200);
-  });
-
-  $(document).on('click', '.js-del', function () {
-    var id = $(this).data('id');
-    if (!confirm('Удалить канал #' + id + '? Все его слоты тоже удалятся.')) return;
-    var $btn = $(this).prop('disabled', true);
-    $.ajax({ url: '/api/channels/' + id, method: 'DELETE' })
-      .done(function () {
-        $btn.closest('tr').remove();
-        $('#channelCount').text(countText(rowCount()));
-        toast('Канал удалён');
-      })
-      .fail(function (xhr) {
-        $btn.prop('disabled', false);
-        toast(xhrErr(xhr), 'error');
-      });
-  });
-
-  $('#btnReset').on('click', resetForm);
-
-  $form.on('submit', function (e) {
-    e.preventDefault();
-    var id     = $form.find('[name=_id]').val();
-    var fd     = new FormData(this);
-    var method = id ? 'PATCH' : 'POST';
-    var url    = id ? ('/api/channels/' + id) : '/api/channels';
-    fd.delete('_id');
-    if (id) fd.delete('slug');
-
-    $submit.prop('disabled', true).text(id ? 'Сохранение…' : 'Создание…');
-
-    $.ajax({ url: url, method: method, data: fd, processData: false, contentType: false })
-      .done(function (resp) {
-        var c = resp.data;
-        if (id) {
-          var $row = $('#channelsTbody tr[data-id="' + id + '"]');
-          $row.replaceWith(buildRow(c));
-          toast('Канал «' + c.name + '» обновлён');
-        } else {
-          $('#channelsTbody').prepend(buildRow(c));
-          $('#channelCount').text(countText(rowCount()));
-          toast('Канал «' + c.name + '» создан');
-        }
-        resetForm();
-        $block.removeAttr('open');
-      })
-      .fail(function (xhr) {
-        toast(xhrErr(xhr), 'error');
-      })
-      .always(function () {
-        $submit.prop('disabled', false).text(id ? 'Сохранить' : 'Создать');
-      });
-  });
-});
+  window.__CHANNELS_INITIAL__ = {
+    channels: <%- JSON.stringify(channels) %>,
+    total: <%= total %>,
+    params: <%- JSON.stringify(params) %>,
+    activity: <%- JSON.stringify(activity) %>
+  };
 </script>
+<script src="/js/roles/admin-channels.js"></script>

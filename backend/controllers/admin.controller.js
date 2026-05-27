@@ -89,10 +89,46 @@ async function renderLogs(req, res, next) {
   } catch (err) { next(err); }
 }
 
+function parseChannelsQuery(q) {
+  let isActive = null;
+  if (q.isActive === 'true') isActive = true;
+  else if (q.isActive === 'false') isActive = false;
+  return {
+    limit: Math.min(parseInt(q.limit || '20', 10), 200),
+    offset: parseInt(q.offset || '0', 10),
+    search: q.q || '',
+    category: q.category || null,
+    isActive,
+    sortBy: q.sortBy || 'name',
+    sortDir: q.sortDir || 'asc',
+    activeOnly: false,
+  };
+}
+
+async function listChannelsAdmin(req, res, next) {
+  try {
+    const params = parseChannelsQuery(req.query);
+    const [channels, total] = await Promise.all([
+      channelModel.list(params),
+      channelModel.count(params),
+    ]);
+    ok(res, channels, { total, limit: params.limit, offset: params.offset });
+  } catch (err) { next(err); }
+}
+
 async function renderChannels(req, res, next) {
   try {
-    const channels = await channelModel.list({ activeOnly: false });
-    res.render('admin/channels-manage', { title: 'Каналы', channels });
+    const params = parseChannelsQuery(req.query);
+    const [channels, total, categories, activity] = await Promise.all([
+      channelModel.list(params),
+      channelModel.count(params),
+      channelModel.distinctCategories(),
+      channelModel.activityCounts(),
+    ]);
+    res.render('admin/channels-manage', {
+      title: 'Каналы', active: 'channels',
+      channels, total, params, categories, activity,
+    });
   } catch (err) { next(err); }
 }
 
@@ -108,6 +144,6 @@ async function renderPrograms(req, res, next) {
 module.exports = {
   listUsers, changeRole, toggleActive,
   assignEditor, unassignEditor,
-  listAudit,
+  listAudit, listChannelsAdmin,
   renderUsers, renderLogs, renderChannels, renderPrograms,
 };

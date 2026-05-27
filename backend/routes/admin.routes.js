@@ -20,5 +20,6 @@ router.patch('/api/users/:id/active',     requireAdmin, a.toggleActive);
 router.post('/api/channels/editors',      requireAdmin, a.assignEditor);
 router.delete('/api/channels/:channelId/editors/:userId', requireAdmin, a.unassignEditor);
 router.get('/api/audit',                  requireAdmin, a.listAudit);
+router.get('/api/channels',               requireAdmin, a.listChannelsAdmin);
 
 module.exports = router;
