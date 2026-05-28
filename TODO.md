@@ -25,4 +25,4 @@
 
 Доделать логику уведомлений. SMTP нужные переменные указаны уже в env
 
-console.log(require('web-push').generateVAPIDKeys())
+node -e "console.log(JSON.stringify(require('web-push').generateVAPIDKeys()))"
