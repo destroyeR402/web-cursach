@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 L8,0" stroke="#bbb" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="hatchSoft" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path d="M0,12 L12,0" stroke="#d8d8d8" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="720" fill="#fafafa"/>
+  <style>
+    .lbl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #555; }
+    .lbl-sm { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #777; }
+    .lbl-lg { font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; fill: #222; font-weight: 600; }
+    .lbl-xl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; fill: #111; font-weight: 700; }
+    .ttl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+    .box { fill: #fff; stroke: #333; stroke-width: 1.5; }
+    .fill { fill: url(#hatch); stroke: #555; stroke-width: 1; }
+    .fillSoft { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .btn { fill: #f0f0f0; stroke: #333; stroke-width: 1.5; }
+    .btn-primary { fill: #333; stroke: #333; }
+    .lbl-btn { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #222; font-weight: 600; }
+    .lbl-btn-w { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #fff; font-weight: 600; }
+    .input { fill: #fff; stroke: #999; stroke-width: 1; }
+    .img { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .img line { stroke: #aaa; stroke-width: 0.7; }
+    .divider { stroke: #ddd; stroke-width: 1; stroke-dasharray: 3 3; }
+    .red { fill: none; stroke: #c33; stroke-width: 1.5; }
+    .lbl-red { fill: #c33; }
+  </style>
+
+<rect x="0" y="0" width="1000" height="50" rx="0" class="fillSoft"/>
+<text x="40" y="30" class="lbl-lg">📺 Расписание ТВ</text>
+<text x="260" y="30" class="lbl">Расписание</text>
+<text x="360" y="30" class="lbl">Поиск</text>
+<rect x="780" y="13" width="90" height="24" rx="4" class="btn"/>
+    <text x="825" y="29" class="lbl-btn" text-anchor="middle">Войти</text>
+<rect x="880" y="13" width="90" height="24" rx="4" class="btn-primary"/>
+    <text x="925" y="29" class="lbl-btn-w" text-anchor="middle">Регистрация</text>
+<rect x="310" y="150" width="380" height="360" rx="3" class="box"/>
+<text x="500" y="200" class="lbl-xl" text-anchor="middle">Вход в систему</text>
+<line x1="370" y1="220" x2="630" y2="220" class="divider"/>
+<text x="340" y="260" class="lbl-sm">Email или логин</text>
+<rect x="340" y="270" width="320" height="38" rx="3" class="input"/>
+    
+<text x="340" y="330" class="lbl-sm">Пароль</text>
+<rect x="340" y="340" width="320" height="38" rx="3" class="input"/>
+    <text x="348" y="363" class="lbl-sm">••••••••</text>
+<rect x="340" y="400" width="320" height="40" rx="4" class="btn-primary"/>
+    <text x="500" y="424" class="lbl-btn-w" text-anchor="middle">Войти</text>
+<text x="500" y="470" class="lbl-sm" text-anchor="middle">Нет аккаунта? Зарегистрируйтесь</text>
+<line x1="0" y1="690" x2="1000" y2="690" class="divider"/>
+    <text x="500" y="708" class="lbl-sm" text-anchor="middle">© 2026  ·  Расписание ТВ  ·  Курсовая работа</text>
+</svg>

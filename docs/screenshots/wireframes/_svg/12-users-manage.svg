@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 L8,0" stroke="#bbb" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="hatchSoft" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path d="M0,12 L12,0" stroke="#d8d8d8" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="720" fill="#fafafa"/>
+  <style>
+    .lbl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #555; }
+    .lbl-sm { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #777; }
+    .lbl-lg { font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; fill: #222; font-weight: 600; }
+    .lbl-xl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; fill: #111; font-weight: 700; }
+    .ttl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+    .box { fill: #fff; stroke: #333; stroke-width: 1.5; }
+    .fill { fill: url(#hatch); stroke: #555; stroke-width: 1; }
+    .fillSoft { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .btn { fill: #f0f0f0; stroke: #333; stroke-width: 1.5; }
+    .btn-primary { fill: #333; stroke: #333; }
+    .lbl-btn { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #222; font-weight: 600; }
+    .lbl-btn-w { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #fff; font-weight: 600; }
+    .input { fill: #fff; stroke: #999; stroke-width: 1; }
+    .img { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .img line { stroke: #aaa; stroke-width: 0.7; }
+    .divider { stroke: #ddd; stroke-width: 1; stroke-dasharray: 3 3; }
+    .red { fill: none; stroke: #c33; stroke-width: 1.5; }
+    .lbl-red { fill: #c33; }
+  </style>
+
+<rect x="0" y="0" width="1000" height="50" rx="0" class="fillSoft"/>
+<text x="40" y="30" class="lbl-lg">📺 Расписание ТВ</text>
+<text x="260" y="30" class="lbl">Расписание</text>
+<text x="360" y="30" class="lbl">Поиск</text>
+<text x="440" y="30" class="lbl">Каналы</text>
+<text x="510" y="30" class="lbl">Передачи</text>
+<text x="585" y="30" class="lbl">Пользователи</text>
+<text x="685" y="30" class="lbl">Журнал</text>
+<text x="800" y="30" class="lbl">admin @ admin</text>
+<rect x="920" y="13" width="50" height="24" rx="4" class="btn"/>
+    <text x="945" y="29" class="lbl-btn" text-anchor="middle">Выйти</text>
+<text x="40" y="100" class="lbl-xl">Пользователи</text>
+<rect x="40" y="135" width="210" height="70" rx="3" class="box"/>
+<text x="58" y="175" class="lbl-xl">6</text>
+<text x="58" y="195" class="ttl">ВСЕГО</text>
+<rect x="265" y="135" width="210" height="70" rx="3" class="box"/>
+<text x="283" y="175" class="lbl-xl">4</text>
+<text x="283" y="195" class="ttl">КЛИЕНТОВ</text>
+<rect x="490" y="135" width="210" height="70" rx="3" class="box"/>
+<text x="508" y="175" class="lbl-xl">1</text>
+<text x="508" y="195" class="ttl">РЕДАКТОРОВ</text>
+<rect x="715" y="135" width="210" height="70" rx="3" class="box"/>
+<text x="733" y="175" class="lbl-xl">1</text>
+<text x="733" y="195" class="ttl">АДМИНОВ</text>
+<rect x="40" y="230" width="380" height="32" rx="3" class="input"/>
+    <text x="48" y="250" class="lbl-sm">Email, логин, имя…</text>
+<rect x="435" y="230" width="200" height="32" rx="3" class="input"/>
+    <text x="443" y="250" class="lbl-sm">Все роли ▾</text>
+<rect x="650" y="230" width="180" height="32" rx="3" class="input"/>
+    <text x="658" y="250" class="lbl-sm">Статус: все ▾</text>
+<rect x="40" y="285" width="920" height="32" rx="3" class="fillSoft"/>
+<text x="54" y="306" class="ttl">ID</text>
+<text x="114" y="306" class="ttl">Email · логин</text>
+<text x="394" y="306" class="ttl">Имя</text>
+<text x="574" y="306" class="ttl">Роль</text>
+<text x="694" y="306" class="ttl">Активен</text>
+<text x="784" y="306" class="ttl">Создан</text>
+<text x="884" y="306" class="ttl">Канал</text>
+<line x1="40" y1="317" x2="960" y2="317" class="divider"/>
+<text x="54" y="345" class="lbl">1</text>
+<text x="114" y="339" class="lbl">admin@tv.local</text>
+<text x="114" y="353" class="lbl-sm">@admin</text>
+<text x="394" y="345" class="lbl">Администратор</text>
+<rect x="574" y="329" width="100" height="26" rx="3" class="input"/>
+    <text x="582" y="346" class="lbl-sm">ADMIN</text>
+<text x="694" y="345" class="lbl-sm">☑ ON</text>
+<text x="784" y="345" class="lbl-sm">28.05.26</text>
+<line x1="40" y1="365" x2="960" y2="365" class="divider"/>
+<text x="54" y="393" class="lbl">2</text>
+<text x="114" y="387" class="lbl">editor@tv.local</text>
+<text x="114" y="401" class="lbl-sm">@editor</text>
+<text x="394" y="393" class="lbl">Редактор сетки</text>
+<rect x="574" y="377" width="100" height="26" rx="3" class="input"/>
+    <text x="582" y="394" class="lbl-sm">EDITOR</text>
+<text x="694" y="393" class="lbl-sm">☑ ON</text>
+<text x="784" y="393" class="lbl-sm">28.05.26</text>
+<line x1="40" y1="413" x2="960" y2="413" class="divider"/>
+<text x="54" y="441" class="lbl">3</text>
+<text x="114" y="435" class="lbl">client@tv.local</text>
+<text x="114" y="449" class="lbl-sm">@client</text>
+<text x="394" y="441" class="lbl">Тестовый клиент</text>
+<rect x="574" y="425" width="100" height="26" rx="3" class="input"/>
+    <text x="582" y="442" class="lbl-sm">CLIENT</text>
+<text x="694" y="441" class="lbl-sm">☑ ON</text>
+<text x="784" y="441" class="lbl-sm">28.05.26</text>
+<line x1="40" y1="461" x2="960" y2="461" class="divider"/>
+<text x="54" y="489" class="lbl">4</text>
+<text x="114" y="483" class="lbl">ivan@tv.local</text>
+<text x="114" y="497" class="lbl-sm">@ivan</text>
+<text x="394" y="489" class="lbl">Иван Петров</text>
+<rect x="574" y="473" width="100" height="26" rx="3" class="input"/>
+    <text x="582" y="490" class="lbl-sm">CLIENT</text>
+<text x="694" y="489" class="lbl-sm">☑ ON</text>
+<text x="784" y="489" class="lbl-sm">28.05.26</text>
+<line x1="40" y1="509" x2="960" y2="509" class="divider"/>
+<text x="54" y="537" class="lbl">5</text>
+<text x="114" y="531" class="lbl">maria@tv.local</text>
+<text x="114" y="545" class="lbl-sm">@maria</text>
+<text x="394" y="537" class="lbl">Мария Сидорова</text>
+<rect x="574" y="521" width="100" height="26" rx="3" class="input"/>
+    <text x="582" y="538" class="lbl-sm">CLIENT</text>
+<text x="694" y="537" class="lbl-sm">☑ ON</text>
+<text x="784" y="537" class="lbl-sm">28.05.26</text>
+<line x1="0" y1="690" x2="1000" y2="690" class="divider"/>
+    <text x="500" y="708" class="lbl-sm" text-anchor="middle">© 2026  ·  Расписание ТВ  ·  Курсовая работа</text>
+</svg>

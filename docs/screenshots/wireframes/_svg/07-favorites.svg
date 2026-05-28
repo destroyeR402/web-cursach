@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 L8,0" stroke="#bbb" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="hatchSoft" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path d="M0,12 L12,0" stroke="#d8d8d8" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="720" fill="#fafafa"/>
+  <style>
+    .lbl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #555; }
+    .lbl-sm { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #777; }
+    .lbl-lg { font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; fill: #222; font-weight: 600; }
+    .lbl-xl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; fill: #111; font-weight: 700; }
+    .ttl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+    .box { fill: #fff; stroke: #333; stroke-width: 1.5; }
+    .fill { fill: url(#hatch); stroke: #555; stroke-width: 1; }
+    .fillSoft { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .btn { fill: #f0f0f0; stroke: #333; stroke-width: 1.5; }
+    .btn-primary { fill: #333; stroke: #333; }
+    .lbl-btn { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #222; font-weight: 600; }
+    .lbl-btn-w { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #fff; font-weight: 600; }
+    .input { fill: #fff; stroke: #999; stroke-width: 1; }
+    .img { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .img line { stroke: #aaa; stroke-width: 0.7; }
+    .divider { stroke: #ddd; stroke-width: 1; stroke-dasharray: 3 3; }
+    .red { fill: none; stroke: #c33; stroke-width: 1.5; }
+    .lbl-red { fill: #c33; }
+  </style>
+
+<rect x="0" y="0" width="1000" height="50" rx="0" class="fillSoft"/>
+<text x="40" y="30" class="lbl-lg">📺 Расписание ТВ</text>
+<text x="260" y="30" class="lbl">Расписание</text>
+<text x="360" y="30" class="lbl">Поиск</text>
+<text x="440" y="30" class="lbl">Кабинет</text>
+<text x="510" y="30" class="lbl">Избранное</text>
+<text x="595" y="30" class="lbl">Подписки</text>
+<text x="800" y="30" class="lbl">ivan @ client</text>
+<rect x="920" y="13" width="50" height="24" rx="4" class="btn"/>
+    <text x="945" y="29" class="lbl-btn" text-anchor="middle">Выйти</text>
+<text x="40" y="100" class="lbl-xl">В избранном</text>
+<text x="40" y="125" class="ttl">3 каналов · 5 передач</text>
+<text x="40" y="165" class="lbl-lg">I  Любимые каналы</text>
+<rect x="640" y="152" width="200" height="26" rx="3" class="input"/>
+    <text x="648" y="169" class="lbl-sm">Поиск канала…</text>
+<rect x="850" y="152" width="110" height="26" rx="3" class="input"/>
+    <text x="858" y="169" class="lbl-sm">Сорт ▾</text>
+<line x1="40" y1="180" x2="960" y2="180" class="divider"/>
+<rect x="40" y="200" width="290" height="90" rx="3" class="box"/>
+<text x="54" y="250" class="lbl-xl">01</text>
+<text x="110" y="230" class="lbl-lg">Канал 1</text>
+<text x="110" y="250" class="ttl">эфирный</text>
+<rect x="110" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="155" y="275" class="lbl-btn" text-anchor="middle">Открыть</text>
+<rect x="205" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="250" y="275" class="lbl-btn" text-anchor="middle">Убрать</text>
+<rect x="345" y="200" width="290" height="90" rx="3" class="box"/>
+<text x="359" y="250" class="lbl-xl">02</text>
+<text x="415" y="230" class="lbl-lg">Канал 2</text>
+<text x="415" y="250" class="ttl">эфирный</text>
+<rect x="415" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="460" y="275" class="lbl-btn" text-anchor="middle">Открыть</text>
+<rect x="510" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="555" y="275" class="lbl-btn" text-anchor="middle">Убрать</text>
+<rect x="650" y="200" width="290" height="90" rx="3" class="box"/>
+<text x="664" y="250" class="lbl-xl">03</text>
+<text x="720" y="230" class="lbl-lg">Канал 3</text>
+<text x="720" y="250" class="ttl">эфирный</text>
+<rect x="720" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="765" y="275" class="lbl-btn" text-anchor="middle">Открыть</text>
+<rect x="815" y="260" width="90" height="22" rx="4" class="btn"/>
+    <text x="860" y="275" class="lbl-btn" text-anchor="middle">Убрать</text>
+<text x="40" y="340" class="lbl-lg">II  Любимые передачи</text>
+<rect x="640" y="327" width="200" height="26" rx="3" class="input"/>
+    <text x="648" y="344" class="lbl-sm">Поиск передачи…</text>
+<rect x="850" y="327" width="110" height="26" rx="3" class="input"/>
+    <text x="858" y="344" class="lbl-sm">Сорт ▾</text>
+<line x1="40" y1="355" x2="960" y2="355" class="divider"/>
+<rect x="40" y="375" width="215" height="200" rx="3" class="box"/>
+<g>
+    <rect x="50" y="385" width="195" height="110" class="img"/>
+    <line x1="50" y1="385" x2="245" y2="495"/>
+    <line x1="245" y1="385" x2="50" y2="495"/>
+  </g>
+<text x="52" y="515" class="lbl">Название</text>
+<text x="52" y="531" class="lbl-sm">◢ Жанр  ◢ 12+</text>
+<rect x="52" y="545" width="95" height="22" rx="4" class="btn"/>
+    <text x="99.5" y="560" class="lbl-btn" text-anchor="middle">★ В избр.</text>
+<rect x="270" y="375" width="215" height="200" rx="3" class="box"/>
+<g>
+    <rect x="280" y="385" width="195" height="110" class="img"/>
+    <line x1="280" y1="385" x2="475" y2="495"/>
+    <line x1="475" y1="385" x2="280" y2="495"/>
+  </g>
+<text x="282" y="515" class="lbl">Название</text>
+<text x="282" y="531" class="lbl-sm">◢ Жанр  ◢ 12+</text>
+<rect x="282" y="545" width="95" height="22" rx="4" class="btn"/>
+    <text x="329.5" y="560" class="lbl-btn" text-anchor="middle">★ В избр.</text>
+<rect x="500" y="375" width="215" height="200" rx="3" class="box"/>
+<g>
+    <rect x="510" y="385" width="195" height="110" class="img"/>
+    <line x1="510" y1="385" x2="705" y2="495"/>
+    <line x1="705" y1="385" x2="510" y2="495"/>
+  </g>
+<text x="512" y="515" class="lbl">Название</text>
+<text x="512" y="531" class="lbl-sm">◢ Жанр  ◢ 12+</text>
+<rect x="512" y="545" width="95" height="22" rx="4" class="btn"/>
+    <text x="559.5" y="560" class="lbl-btn" text-anchor="middle">★ В избр.</text>
+<rect x="730" y="375" width="215" height="200" rx="3" class="box"/>
+<g>
+    <rect x="740" y="385" width="195" height="110" class="img"/>
+    <line x1="740" y1="385" x2="935" y2="495"/>
+    <line x1="935" y1="385" x2="740" y2="495"/>
+  </g>
+<text x="742" y="515" class="lbl">Название</text>
+<text x="742" y="531" class="lbl-sm">◢ Жанр  ◢ 12+</text>
+<rect x="742" y="545" width="95" height="22" rx="4" class="btn"/>
+    <text x="789.5" y="560" class="lbl-btn" text-anchor="middle">★ В избр.</text>
+<line x1="0" y1="690" x2="1000" y2="690" class="divider"/>
+    <text x="500" y="708" class="lbl-sm" text-anchor="middle">© 2026  ·  Расписание ТВ  ·  Курсовая работа</text>
+</svg>

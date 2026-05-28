@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 L8,0" stroke="#bbb" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="hatchSoft" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path d="M0,12 L12,0" stroke="#d8d8d8" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="720" fill="#fafafa"/>
+  <style>
+    .lbl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #555; }
+    .lbl-sm { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #777; }
+    .lbl-lg { font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; fill: #222; font-weight: 600; }
+    .lbl-xl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; fill: #111; font-weight: 700; }
+    .ttl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+    .box { fill: #fff; stroke: #333; stroke-width: 1.5; }
+    .fill { fill: url(#hatch); stroke: #555; stroke-width: 1; }
+    .fillSoft { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .btn { fill: #f0f0f0; stroke: #333; stroke-width: 1.5; }
+    .btn-primary { fill: #333; stroke: #333; }
+    .lbl-btn { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #222; font-weight: 600; }
+    .lbl-btn-w { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #fff; font-weight: 600; }
+    .input { fill: #fff; stroke: #999; stroke-width: 1; }
+    .img { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .img line { stroke: #aaa; stroke-width: 0.7; }
+    .divider { stroke: #ddd; stroke-width: 1; stroke-dasharray: 3 3; }
+    .red { fill: none; stroke: #c33; stroke-width: 1.5; }
+    .lbl-red { fill: #c33; }
+  </style>
+
+<rect x="0" y="0" width="1000" height="50" rx="0" class="fillSoft"/>
+<text x="40" y="30" class="lbl-lg">📺 Расписание ТВ</text>
+<text x="260" y="30" class="lbl">Расписание</text>
+<text x="360" y="30" class="lbl">Поиск</text>
+<text x="440" y="30" class="lbl">Кабинет</text>
+<text x="510" y="30" class="lbl">Избранное</text>
+<text x="595" y="30" class="lbl">Подписки</text>
+<text x="800" y="30" class="lbl">ivan @ client</text>
+<rect x="920" y="13" width="50" height="24" rx="4" class="btn"/>
+    <text x="945" y="29" class="lbl-btn" text-anchor="middle">Выйти</text>
+<text x="40" y="100" class="lbl-xl">Подписки и уведомления</text>
+<text x="40" y="124" class="lbl-sm">Получайте email-уведомления о публикации новой сетки на выбранных каналах</text>
+<rect x="40" y="150" width="920" height="175" rx="3" class="box"/>
+<text x="56" y="175" class="lbl-lg">+ Подписаться на канал</text>
+<line x1="56" y1="188" x2="944" y2="188" class="divider"/>
+<text x="56" y="215" class="lbl-sm">Канал</text>
+<rect x="56" y="224" width="380" height="32" rx="3" class="input"/>
+    <text x="64" y="244" class="lbl-sm">Первый канал ▾</text>
+<rect x="450" y="224" width="110" height="32" rx="3" class="box"/>
+<text x="462" y="244" class="lbl-sm">☑ 📧 Email</text>
+<rect x="568" y="224" width="110" height="32" rx="3" class="box"/>
+<text x="580" y="244" class="lbl-sm">☐ 🔔 Push</text>
+<rect x="800" y="224" width="140" height="32" rx="4" class="btn-primary"/>
+    <text x="870" y="244" class="lbl-btn-w" text-anchor="middle">Подписаться</text>
+<text x="40" y="360" class="lbl-lg">Активные подписки (3)</text>
+<line x1="40" y1="375" x2="960" y2="375" class="divider"/>
+<rect x="48" y="400" width="56" height="56" rx="3" class="box"/>
+<g><line x1="48" y1="400" x2="104" y2="456" class="img"/><line x1="104" y1="400" x2="48" y2="456" class="img"/></g>
+<text x="125" y="428" class="lbl-lg">Канал 1</text>
+<text x="125" y="448" class="lbl-sm">◢ эфирный</text>
+<text x="720" y="428" class="lbl-sm">📧 EMAIL    🔔 PUSH</text>
+<text x="720" y="445" class="lbl-sm">с 28.05.2026</text>
+<rect x="870" y="418" width="100" height="28" rx="4" class="btn"/>
+    <text x="920" y="436" class="lbl-btn" text-anchor="middle">Отписаться</text>
+<line x1="40" y1="468" x2="960" y2="468" class="divider"/>
+<rect x="48" y="480" width="56" height="56" rx="3" class="box"/>
+<g><line x1="48" y1="480" x2="104" y2="536" class="img"/><line x1="104" y1="480" x2="48" y2="536" class="img"/></g>
+<text x="125" y="508" class="lbl-lg">Канал 2</text>
+<text x="125" y="528" class="lbl-sm">◢ эфирный</text>
+<text x="720" y="508" class="lbl-sm">📧 EMAIL    🔔 PUSH</text>
+<text x="720" y="525" class="lbl-sm">с 28.05.2026</text>
+<rect x="870" y="498" width="100" height="28" rx="4" class="btn"/>
+    <text x="920" y="516" class="lbl-btn" text-anchor="middle">Отписаться</text>
+<line x1="40" y1="548" x2="960" y2="548" class="divider"/>
+<rect x="48" y="560" width="56" height="56" rx="3" class="box"/>
+<g><line x1="48" y1="560" x2="104" y2="616" class="img"/><line x1="104" y1="560" x2="48" y2="616" class="img"/></g>
+<text x="125" y="588" class="lbl-lg">Канал 3</text>
+<text x="125" y="608" class="lbl-sm">◢ эфирный</text>
+<text x="720" y="588" class="lbl-sm">📧 EMAIL    🔔 PUSH</text>
+<text x="720" y="605" class="lbl-sm">с 28.05.2026</text>
+<rect x="870" y="578" width="100" height="28" rx="4" class="btn"/>
+    <text x="920" y="596" class="lbl-btn" text-anchor="middle">Отписаться</text>
+<line x1="40" y1="628" x2="960" y2="628" class="divider"/>
+<line x1="0" y1="690" x2="1000" y2="690" class="divider"/>
+    <text x="500" y="708" class="lbl-sm" text-anchor="middle">© 2026  ·  Расписание ТВ  ·  Курсовая работа</text>
+</svg>

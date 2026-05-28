@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0,8 L8,0" stroke="#bbb" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="hatchSoft" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path d="M0,12 L12,0" stroke="#d8d8d8" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="720" fill="#fafafa"/>
+  <style>
+    .lbl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: #555; }
+    .lbl-sm { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #777; }
+    .lbl-lg { font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; fill: #222; font-weight: 600; }
+    .lbl-xl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 26px; fill: #111; font-weight: 700; }
+    .ttl { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: #999; text-transform: uppercase; letter-spacing: 0.1em; }
+    .box { fill: #fff; stroke: #333; stroke-width: 1.5; }
+    .fill { fill: url(#hatch); stroke: #555; stroke-width: 1; }
+    .fillSoft { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .btn { fill: #f0f0f0; stroke: #333; stroke-width: 1.5; }
+    .btn-primary { fill: #333; stroke: #333; }
+    .lbl-btn { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #222; font-weight: 600; }
+    .lbl-btn-w { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: #fff; font-weight: 600; }
+    .input { fill: #fff; stroke: #999; stroke-width: 1; }
+    .img { fill: url(#hatchSoft); stroke: #aaa; stroke-width: 1; }
+    .img line { stroke: #aaa; stroke-width: 0.7; }
+    .divider { stroke: #ddd; stroke-width: 1; stroke-dasharray: 3 3; }
+    .red { fill: none; stroke: #c33; stroke-width: 1.5; }
+    .lbl-red { fill: #c33; }
+  </style>
+
+<rect x="0" y="0" width="1000" height="50" rx="0" class="fillSoft"/>
+<text x="40" y="30" class="lbl-lg">📺 Расписание ТВ</text>
+<text x="260" y="30" class="lbl">Расписание</text>
+<text x="360" y="30" class="lbl">Поиск</text>
+<rect x="780" y="13" width="90" height="24" rx="4" class="btn"/>
+    <text x="825" y="29" class="lbl-btn" text-anchor="middle">Войти</text>
+<rect x="880" y="13" width="90" height="24" rx="4" class="btn-primary"/>
+    <text x="925" y="29" class="lbl-btn-w" text-anchor="middle">Регистрация</text>
+<text x="40" y="95" class="lbl-xl">Расписание на 28-05-2026</text>
+<rect x="680" y="75" width="28" height="26" rx="4" class="btn"/>
+    <text x="694" y="92" class="lbl-btn" text-anchor="middle">‹</text>
+<rect x="715" y="75" width="130" height="26" rx="3" class="input"/>
+    <text x="723" y="92" class="lbl-sm">28-05-2026</text>
+<rect x="850" y="75" width="28" height="26" rx="4" class="btn"/>
+    <text x="864" y="92" class="lbl-btn" text-anchor="middle">›</text>
+<rect x="885" y="75" width="75" height="26" rx="4" class="btn"/>
+    <text x="922.5" y="92" class="lbl-btn" text-anchor="middle">Сегодня</text>
+<rect x="40" y="130" width="920" height="64" rx="3" class="box"/>
+<text x="56" y="152" class="ttl">// Поиск передачи</text>
+<rect x="56" y="162" width="380" height="24" rx="3" class="input"/>
+    <text x="64" y="178" class="lbl-sm">Название, ключевое слово…</text>
+<rect x="450" y="162" width="200" height="24" rx="3" class="input"/>
+    <text x="458" y="178" class="lbl-sm">Все жанры ▾</text>
+<rect x="665" y="162" width="140" height="24" rx="3" class="input"/>
+    <text x="673" y="178" class="lbl-sm">дд.мм.гггг</text>
+<rect x="830" y="162" width="110" height="24" rx="4" class="btn-primary"/>
+    <text x="885" y="178" class="lbl-btn-w" text-anchor="middle">Найти</text>
+<text x="40" y="222" class="lbl">☐ только избранные каналы</text>
+<rect x="740" y="207" width="110" height="22" rx="4" class="btn"/>
+    <text x="795" y="222" class="lbl-btn" text-anchor="middle">Развернуть все</text>
+<rect x="860" y="207" width="100" height="22" rx="4" class="btn"/>
+    <text x="910" y="222" class="lbl-btn" text-anchor="middle">Свернуть</text>
+<line x1="40" y1="240" x2="960" y2="240" class="divider"/>
+<rect x="40" y="255" width="920" height="55" rx="3" class="box"/>
+<g>
+    <rect x="54" y="264" width="36" height="36" class="img"/>
+    <line x1="54" y1="264" x2="90" y2="300"/>
+    <line x1="90" y1="264" x2="54" y2="300"/>
+  </g>
+<text x="105" y="277" class="lbl-lg">Канал 1</text>
+<text x="105" y="297" class="ttl">эфирный · /channel</text>
+<text x="540" y="288" class="lbl-red">● Сейчас: Утренние новости</text>
+<text x="905" y="288" class="lbl-sm" text-anchor="end">10 передач</text>
+<text x="935" y="290" class="lbl-lg" text-anchor="middle">▾</text>
+<rect x="40" y="320" width="920" height="55" rx="3" class="box"/>
+<g>
+    <rect x="54" y="329" width="36" height="36" class="img"/>
+    <line x1="54" y1="329" x2="90" y2="365"/>
+    <line x1="90" y1="329" x2="54" y2="365"/>
+  </g>
+<text x="105" y="342" class="lbl-lg">Канал 2</text>
+<text x="105" y="362" class="ttl">эфирный · /channel</text>
+<text x="905" y="353" class="lbl-sm" text-anchor="end">12 передач</text>
+<text x="935" y="355" class="lbl-lg" text-anchor="middle">▾</text>
+<rect x="40" y="385" width="920" height="55" rx="3" class="box"/>
+<g>
+    <rect x="54" y="394" width="36" height="36" class="img"/>
+    <line x1="54" y1="394" x2="90" y2="430"/>
+    <line x1="90" y1="394" x2="54" y2="430"/>
+  </g>
+<text x="105" y="407" class="lbl-lg">Канал 3</text>
+<text x="105" y="427" class="ttl">эфирный · /channel</text>
+<text x="905" y="418" class="lbl-sm" text-anchor="end">14 передач</text>
+<text x="935" y="420" class="lbl-lg" text-anchor="middle">▾</text>
+<rect x="40" y="450" width="920" height="55" rx="3" class="box"/>
+<g>
+    <rect x="54" y="459" width="36" height="36" class="img"/>
+    <line x1="54" y1="459" x2="90" y2="495"/>
+    <line x1="90" y1="459" x2="54" y2="495"/>
+  </g>
+<text x="105" y="472" class="lbl-lg">Канал 4</text>
+<text x="105" y="492" class="ttl">эфирный · /channel</text>
+<text x="905" y="483" class="lbl-sm" text-anchor="end">16 передач</text>
+<text x="935" y="485" class="lbl-lg" text-anchor="middle">▾</text>
+<rect x="40" y="515" width="920" height="55" rx="3" class="box"/>
+<g>
+    <rect x="54" y="524" width="36" height="36" class="img"/>
+    <line x1="54" y1="524" x2="90" y2="560"/>
+    <line x1="90" y1="524" x2="54" y2="560"/>
+  </g>
+<text x="105" y="537" class="lbl-lg">Канал 5</text>
+<text x="105" y="557" class="ttl">эфирный · /channel</text>
+<text x="905" y="548" class="lbl-sm" text-anchor="end">18 передач</text>
+<text x="935" y="550" class="lbl-lg" text-anchor="middle">▾</text>
+<line x1="0" y1="690" x2="1000" y2="690" class="divider"/>
+    <text x="500" y="708" class="lbl-sm" text-anchor="middle">© 2026  ·  Расписание ТВ  ·  Курсовая работа</text>
+</svg>
